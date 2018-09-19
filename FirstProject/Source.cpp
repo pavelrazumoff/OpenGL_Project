@@ -284,6 +284,8 @@ void clearBuffers()
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
 	glViewport(0, 0, width, height);
+	screenWidth = width;
+	screenHeight = height;
 }
 
 void processInput(GLFWwindow *window)

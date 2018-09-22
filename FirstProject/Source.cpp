@@ -17,47 +17,47 @@ void render();
 int screenWidth, screenHeight;
 
 float vertices[] = {
-		-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
-		 0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
-		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-		-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+		-0.5f, -0.5f, -0.5f,  //0.0f, 0.0f,
+		 0.5f, -0.5f, -0.5f,  //1.0f, 0.0f,
+		 0.5f,  0.5f, -0.5f,  //1.0f, 1.0f,
+		 0.5f,  0.5f, -0.5f,  //1.0f, 1.0f,
+		-0.5f,  0.5f, -0.5f,  //0.0f, 1.0f,
+		-0.5f, -0.5f, -0.5f,  //0.0f, 0.0f,
 
-		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-		 0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-		 0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-		 0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-		-0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
-		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+		-0.5f, -0.5f,  0.5f,  //0.0f, 0.0f,
+		 0.5f, -0.5f,  0.5f,  //1.0f, 0.0f,
+		 0.5f,  0.5f,  0.5f,  //1.0f, 1.0f,
+		 0.5f,  0.5f,  0.5f,  //1.0f, 1.0f,
+		-0.5f,  0.5f,  0.5f,  //0.0f, 1.0f,
+		-0.5f, -0.5f,  0.5f,  //0.0f, 0.0f,
 
-		-0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-		-0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-		-0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+		-0.5f,  0.5f,  0.5f,  //1.0f, 0.0f,
+		-0.5f,  0.5f, -0.5f,  //1.0f, 1.0f,
+		-0.5f, -0.5f, -0.5f,  //0.0f, 1.0f,
+		-0.5f, -0.5f, -0.5f,  //0.0f, 1.0f,
+		-0.5f, -0.5f,  0.5f,  //0.0f, 0.0f,
+		-0.5f,  0.5f,  0.5f,  //1.0f, 0.0f,
 
-		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-		 0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-		 0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-		 0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+		 0.5f,  0.5f,  0.5f,  //1.0f, 0.0f,
+		 0.5f,  0.5f, -0.5f,  //1.0f, 1.0f,
+		 0.5f, -0.5f, -0.5f,  //0.0f, 1.0f,
+		 0.5f, -0.5f, -0.5f,  //0.0f, 1.0f,
+		 0.5f, -0.5f,  0.5f,  //0.0f, 0.0f,
+		 0.5f,  0.5f,  0.5f,  //1.0f, 0.0f,
 
-		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-		 0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
-		 0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-		 0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+		-0.5f, -0.5f, -0.5f,  //0.0f, 1.0f,
+		 0.5f, -0.5f, -0.5f,  //1.0f, 1.0f,
+		 0.5f, -0.5f,  0.5f,  //1.0f, 0.0f,
+		 0.5f, -0.5f,  0.5f,  //1.0f, 0.0f,
+		-0.5f, -0.5f,  0.5f,  //0.0f, 0.0f,
+		-0.5f, -0.5f, -0.5f,  //0.0f, 1.0f,
 
-		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-		-0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
-		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f
+		-0.5f,  0.5f, -0.5f,  //0.0f, 1.0f,
+		 0.5f,  0.5f, -0.5f,  //1.0f, 1.0f,
+		 0.5f,  0.5f,  0.5f,  //1.0f, 0.0f,
+		 0.5f,  0.5f,  0.5f,  //1.0f, 0.0f,
+		-0.5f,  0.5f,  0.5f,  //0.0f, 0.0f,
+		-0.5f,  0.5f, -0.5f,  //0.0f, 1.0f
 };
 unsigned int indices[] = { // note that we start from 0!
 	0, 1, 3, // first triangle
@@ -66,12 +66,17 @@ unsigned int indices[] = { // note that we start from 0!
 
 unsigned int VBO;
 unsigned int EBO;
-unsigned int VAO;
+
+unsigned int cubeVAO;
+unsigned int lightVAO;
 
 unsigned int texture1, texture2;
 
 Shader basic_shader;
+Shader lamp_shader;
 Camera camera;
+
+glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
 
 float deltaTime = 0.0f; // Time between current frame and last frame
 float lastFrame = 0.0f; // Time of last frame
@@ -140,7 +145,7 @@ int main()
 
 void init()
 {
-	camera.init(glm::vec3(0.0f, 0.0f, 3.0f), glm::vec3(0.0f, 1.0f, 0.0f), -90.0f, 0.0f);
+	camera.init(glm::vec3(0.0f, 1.0f, 6.0f), glm::vec3(0.0f, 1.0f, 0.0f), -90.0f, 0.0f);
 
 	loadShaders();
 	initBuffers();
@@ -149,7 +154,8 @@ void init()
 
 void loadShaders()
 {
-	basic_shader.load("Shaders//VertexShader.glsl", "Shaders//FragmentShader.glsl");
+	basic_shader.load("Shaders//Basic//VertexShader.glsl", "Shaders//Basic//FragmentShader.glsl");
+	lamp_shader.load("Shaders//Lamp//LampVS.glsl", "Shaders//Lamp//LampFS.glsl");
 }
 
 void loadTextures()
@@ -215,14 +221,14 @@ void loadTextures()
 void initBuffers()
 {
 	// Generate VAO (Vertex Array Object).
-	glGenVertexArrays(1, &VAO);
+	glGenVertexArrays(1, &cubeVAO);
 	// Generate VBO (Vertex Buffer Objects).
 	glGenBuffers(1, &VBO);
 	// Generete EBO (Element Buffer Objects).
 	//glGenBuffers(1, &EBO);
 
 	// 0. bind Vertex Array Object.
-	glBindVertexArray(VAO);
+	glBindVertexArray(cubeVAO);
 
 	// 1. copy our vertices array in a buffer for OpenGL to use.
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
@@ -234,12 +240,12 @@ void initBuffers()
 
 	// 3. then set the vertex attributes pointers.
 	// position attribute.
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
 
 	// texture attribute.
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
-	glEnableVertexAttribArray(1);
+	//glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+	//glEnableVertexAttribArray(1);
 
 	// note that this is allowed, the call to glVertexAttribPointer registered VBO as the vertex attribute's bound vertex buffer object so afterwards we can safely unbind.
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -249,6 +255,17 @@ void initBuffers()
 	glBindVertexArray(0);
 
 	glEnable(GL_DEPTH_TEST);
+
+	// Lighting cube.
+	glGenVertexArrays(1, &lightVAO);
+	glBindVertexArray(lightVAO);
+
+	// we only need to bind to the VBO, the container’s VBO’s data already contains the correct data.
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+
+	// set the vertex attributes (only position data for our lamp).
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
 }
 
 void update()
@@ -260,38 +277,60 @@ void update()
 
 void render()
 {
-	glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+	// Draw Lamp.
+	lamp_shader.use();
+
+	glm::mat4 model;
+	glm::mat4 view = camera.GetViewMatrix();
+	glm::mat4 projection = glm::perspective(glm::radians(camera.getZoom()), (float)screenWidth / (float)screenHeight, 0.1f, 100.0f);
+
+	model = glm::translate(model, lightPos);
+	model = glm::scale(model, glm::vec3(0.2f));
+
+	glBindVertexArray(lightVAO);
+
+	int modelLoc = glGetUniformLocation(lamp_shader.getShaderProgram(), "model");
+	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+
+	int viewLoc = glGetUniformLocation(lamp_shader.getShaderProgram(), "view");
+	glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
+
+	int projLoc = glGetUniformLocation(lamp_shader.getShaderProgram(), "projection");
+	glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
+
+	glDrawArrays(GL_TRIANGLES, 0, 36);
+
+	// Draw scene.
 	// Use our shader program when we want to render an object.
 	basic_shader.use();
 
 	// Wireframe mode.
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, texture1);
+	//glActiveTexture(GL_TEXTURE0);
+	//glBindTexture(GL_TEXTURE_2D, texture1);
 
-	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, texture2);
+	//glActiveTexture(GL_TEXTURE1);
+	//glBindTexture(GL_TEXTURE_2D, texture2);
 
-	glm::mat4 model;
-	model = glm::rotate(model, (float)glfwGetTime() * glm::radians(50.0f), glm::vec3(0.5f, 1.0f, 0.0f));
+	basic_shader.setVec3("objectColor", 1.0f, 0.5f, 0.31f);
+	basic_shader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
 
-	glm::mat4 view = camera.GetViewMatrix();
+	model = glm::mat4();
+	model = glm::rotate(model, glm::radians(30.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 
-	glm::mat4 projection;
-	projection = glm::perspective(glm::radians(camera.getZoom()), (float)screenWidth / (float)screenHeight, 0.1f, 100.0f);
+	glBindVertexArray(cubeVAO);
 
-	glBindVertexArray(VAO);
-
-	int modelLoc = glGetUniformLocation(basic_shader.getShaderProgram(), "model");
+	modelLoc = glGetUniformLocation(basic_shader.getShaderProgram(), "model");
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 
-	int viewLoc = glGetUniformLocation(basic_shader.getShaderProgram(), "view");
+	viewLoc = glGetUniformLocation(basic_shader.getShaderProgram(), "view");
 	glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
 
-	int projLoc = glGetUniformLocation(basic_shader.getShaderProgram(), "projection");
+	projLoc = glGetUniformLocation(basic_shader.getShaderProgram(), "projection");
 	glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
 
 	//glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
@@ -301,7 +340,8 @@ void render()
 
 void clearBuffers()
 {
-	glDeleteVertexArrays(1, &VAO);
+	glDeleteVertexArrays(1, &cubeVAO);
+	glDeleteVertexArrays(1, &lightVAO);
 	glDeleteBuffers(1, &VBO);
 }
 

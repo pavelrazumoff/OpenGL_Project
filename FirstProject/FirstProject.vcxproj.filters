@@ -16,6 +16,12 @@
     <Filter Include="Shaders">
       <UniqueIdentifier>{d985b439-a60b-41fc-b4bd-605cf2dc5f60}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Shaders\Basic">
+      <UniqueIdentifier>{496b42aa-7ad9-4811-8d14-3038052765cf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shaders\Lamp">
+      <UniqueIdentifier>{fa93af06-343c-40dd-a99f-82e618674467}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="glad.c">
@@ -52,11 +58,17 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Shaders\VertexShader.glsl">
-      <Filter>Shaders</Filter>
+    <None Include="Shaders\Basic\VertexShader.glsl">
+      <Filter>Shaders\Basic</Filter>
     </None>
-    <None Include="Shaders\FragmentShader.glsl">
-      <Filter>Shaders</Filter>
+    <None Include="Shaders\Basic\FragmentShader.glsl">
+      <Filter>Shaders\Basic</Filter>
+    </None>
+    <None Include="Shaders\Lamp\LampFS.glsl">
+      <Filter>Shaders\Lamp</Filter>
+    </None>
+    <None Include="Shaders\Lamp\LampVS.glsl">
+      <Filter>Shaders\Lamp</Filter>
     </None>
   </ItemGroup>
 </Project>

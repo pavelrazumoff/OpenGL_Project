@@ -320,6 +320,22 @@ void render()
 	//glActiveTexture(GL_TEXTURE1);
 	//glBindTexture(GL_TEXTURE_2D, texture2);
 
+	glm::vec3 lightColor;
+	lightColor.x = sin(glfwGetTime() * 2.0f);
+	lightColor.y = sin(glfwGetTime() * 0.7f);
+	lightColor.z = sin(glfwGetTime() * 1.3f);
+	glm::vec3 ambientColor = lightColor * glm::vec3(0.2f); // low influence
+	glm::vec3 diffuseColor = lightColor * glm::vec3(0.5f); // decrease the influence
+
+	basic_shader.setVec3("light.ambient", ambientColor);
+	basic_shader.setVec3("light.diffuse", diffuseColor);
+	basic_shader.setVec3("light.specular", 1.0f, 1.0f, 1.0f);
+
+	basic_shader.setVec3("material.ambient", 1.0f, 0.5f, 0.31f);
+	basic_shader.setVec3("material.diffuse", 1.0f, 0.5f, 0.31f);
+	basic_shader.setVec3("material.specular", 0.5f, 0.5f, 0.5f);
+	basic_shader.setFloat("material.shininess", 32.0f);
+
 	basic_shader.setVec3("objectColor", 1.0f, 0.5f, 0.31f);
 	basic_shader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
 	basic_shader.setVec3("lightPos", lightPos);

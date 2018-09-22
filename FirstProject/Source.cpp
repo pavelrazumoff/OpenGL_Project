@@ -17,47 +17,47 @@ void render();
 int screenWidth, screenHeight;
 
 float vertices[] = {
-		-0.5f, -0.5f, -0.5f,  //0.0f, 0.0f,
-		 0.5f, -0.5f, -0.5f,  //1.0f, 0.0f,
-		 0.5f,  0.5f, -0.5f,  //1.0f, 1.0f,
-		 0.5f,  0.5f, -0.5f,  //1.0f, 1.0f,
-		-0.5f,  0.5f, -0.5f,  //0.0f, 1.0f,
-		-0.5f, -0.5f, -0.5f,  //0.0f, 0.0f,
+	-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+	 0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+	 0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+	 0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+	-0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+	-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
 
-		-0.5f, -0.5f,  0.5f,  //0.0f, 0.0f,
-		 0.5f, -0.5f,  0.5f,  //1.0f, 0.0f,
-		 0.5f,  0.5f,  0.5f,  //1.0f, 1.0f,
-		 0.5f,  0.5f,  0.5f,  //1.0f, 1.0f,
-		-0.5f,  0.5f,  0.5f,  //0.0f, 1.0f,
-		-0.5f, -0.5f,  0.5f,  //0.0f, 0.0f,
+	-0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+	 0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+	 0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+	 0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+	-0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+	-0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
 
-		-0.5f,  0.5f,  0.5f,  //1.0f, 0.0f,
-		-0.5f,  0.5f, -0.5f,  //1.0f, 1.0f,
-		-0.5f, -0.5f, -0.5f,  //0.0f, 1.0f,
-		-0.5f, -0.5f, -0.5f,  //0.0f, 1.0f,
-		-0.5f, -0.5f,  0.5f,  //0.0f, 0.0f,
-		-0.5f,  0.5f,  0.5f,  //1.0f, 0.0f,
+	-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+	-0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
+	-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
+	-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
+	-0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+	-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
 
-		 0.5f,  0.5f,  0.5f,  //1.0f, 0.0f,
-		 0.5f,  0.5f, -0.5f,  //1.0f, 1.0f,
-		 0.5f, -0.5f, -0.5f,  //0.0f, 1.0f,
-		 0.5f, -0.5f, -0.5f,  //0.0f, 1.0f,
-		 0.5f, -0.5f,  0.5f,  //0.0f, 0.0f,
-		 0.5f,  0.5f,  0.5f,  //1.0f, 0.0f,
+	 0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+	 0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
+	 0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
+	 0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
+	 0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+	 0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
 
-		-0.5f, -0.5f, -0.5f,  //0.0f, 1.0f,
-		 0.5f, -0.5f, -0.5f,  //1.0f, 1.0f,
-		 0.5f, -0.5f,  0.5f,  //1.0f, 0.0f,
-		 0.5f, -0.5f,  0.5f,  //1.0f, 0.0f,
-		-0.5f, -0.5f,  0.5f,  //0.0f, 0.0f,
-		-0.5f, -0.5f, -0.5f,  //0.0f, 1.0f,
+	-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+	 0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+	 0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+	 0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+	-0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+	-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
 
-		-0.5f,  0.5f, -0.5f,  //0.0f, 1.0f,
-		 0.5f,  0.5f, -0.5f,  //1.0f, 1.0f,
-		 0.5f,  0.5f,  0.5f,  //1.0f, 0.0f,
-		 0.5f,  0.5f,  0.5f,  //1.0f, 0.0f,
-		-0.5f,  0.5f,  0.5f,  //0.0f, 0.0f,
-		-0.5f,  0.5f, -0.5f,  //0.0f, 1.0f
+	-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
+	 0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
+	 0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+	 0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+	-0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+	-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f
 };
 unsigned int indices[] = { // note that we start from 0!
 	0, 1, 3, // first triangle
@@ -213,9 +213,9 @@ void loadTextures()
 
 	// tell opengl for each sampler to which texture unit it belongs to (only has to be done once)
 	// -------------------------------------------------------------------------------------------
-	basic_shader.use(); // don't forget to activate/use the shader before setting uniforms!
-	basic_shader.setInt("texture1", 0);
-	basic_shader.setInt("texture2", 1);
+	//basic_shader.use(); // don't forget to activate/use the shader before setting uniforms!
+	//basic_shader.setInt("texture1", 0);
+	//basic_shader.setInt("texture2", 1);
 }
 
 void initBuffers()
@@ -240,8 +240,12 @@ void initBuffers()
 
 	// 3. then set the vertex attributes pointers.
 	// position attribute.
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
+
+	// normal attribute.
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
 
 	// texture attribute.
 	//glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
@@ -264,7 +268,7 @@ void initBuffers()
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
 	// set the vertex attributes (only position data for our lamp).
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
 }
 
@@ -318,6 +322,8 @@ void render()
 
 	basic_shader.setVec3("objectColor", 1.0f, 0.5f, 0.31f);
 	basic_shader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
+	basic_shader.setVec3("lightPos", lightPos);
+	basic_shader.setVec3("viewPos", camera.getPosition());
 
 	model = glm::mat4();
 	model = glm::rotate(model, glm::radians(30.0f), glm::vec3(0.0f, 1.0f, 0.0f));

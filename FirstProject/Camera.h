@@ -31,6 +31,7 @@ public:
 
 	// Returns the view matrix calculated using Euler Angles and the LookAt Matrix
 	glm::mat4 GetViewMatrix();
+	glm::vec3 getPosition();
 
 	float getZoom();
 

@@ -31,6 +31,11 @@ glm::vec3 Camera::getPosition()
 	return Position;
 }
 
+glm::vec3 Camera::getFront()
+{
+	return Front;
+}
+
 float Camera::getZoom()
 {
 	return Zoom;

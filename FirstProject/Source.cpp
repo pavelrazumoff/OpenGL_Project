@@ -1,5 +1,6 @@
 #include "Shader.h"
 #include "Camera.h"
+#include "Model.h"
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow *window);
@@ -8,7 +9,6 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 
 void init();
 void loadShaders();
-void loadTextures();
 void initBuffers();
 void clearBuffers();
 void update();
@@ -68,7 +68,6 @@ unsigned int indices[] = { // note that we start from 0!
 unsigned int VBO;
 unsigned int EBO;
 
-unsigned int cubeVAO;
 unsigned int lightVAO;
 
 unsigned int diffuseMap;
@@ -77,6 +76,7 @@ unsigned int specularMap;
 Shader basic_shader;
 Shader lamp_shader;
 Camera camera;
+Model model;
 
 glm::vec3 pointLightPositions[] = {
 	glm::vec3(0.7f, 0.2f, 2.0f),
@@ -154,9 +154,13 @@ void init()
 {
 	camera.init(glm::vec3(0.0f, 1.0f, 6.0f), glm::vec3(0.0f, 1.0f, 0.0f), -90.0f, 0.0f);
 
+	//uncomment it if not using models loading.
+	//stbi_set_flip_vertically_on_load(true);
+
 	loadShaders();
 	initBuffers();
-	loadTextures();
+
+	model.loadModel("Models//house_01.obj");
 }
 
 void loadShaders()
@@ -165,89 +169,10 @@ void loadShaders()
 	lamp_shader.load("Shaders//Lamp//LampVS.glsl", "Shaders//Lamp//LampFS.glsl");
 }
 
-void loadTextures()
-{
-	unsigned int* textures[] = { &diffuseMap, &specularMap };
-	const char* filenames[] = { "Images//container2.png", "Images//container2_specular.png" };
-
-	stbi_set_flip_vertically_on_load(true);
-
-	for (int i = 0; i < 2; ++i)
-	{
-		glGenTextures(1, textures[i]);
-		glBindTexture(GL_TEXTURE_2D, *textures[i]);
-
-		// set the texture wrapping/filtering options (on the currently bound texture object)
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-		int width, height, nrChannels;
-		unsigned char *data = stbi_load(filenames[i], &width, &height, &nrChannels, 0);
-
-		if (data)
-		{
-			GLenum format;
-			if (nrChannels == 1)
-				format = GL_RED;
-			else if (nrChannels == 3)
-				format = GL_RGB;
-			else if (nrChannels == 4)
-				format = GL_RGBA;
-
-			glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
-			glGenerateMipmap(GL_TEXTURE_2D);
-		}
-		else
-		{
-			std::cout << "Failed to load texture" << std::endl;
-		}
-
-		stbi_image_free(data);
-	}
-}
-
 void initBuffers()
 {
-	// Generate VAO (Vertex Array Object).
-	glGenVertexArrays(1, &cubeVAO);
 	// Generate VBO (Vertex Buffer Objects).
 	glGenBuffers(1, &VBO);
-	// Generete EBO (Element Buffer Objects).
-	//glGenBuffers(1, &EBO);
-
-	// 0. bind Vertex Array Object.
-	glBindVertexArray(cubeVAO);
-
-	// 1. copy our vertices array in a buffer for OpenGL to use.
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-	// 2. copy our indices array in a buffer.
-	//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-	//glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-
-	// 3. then set the vertex attributes pointers.
-	// position attribute.
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(0);
-
-	// normal attribute.
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
-	glEnableVertexAttribArray(1);
-
-	// texture attribute.
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
-	glEnableVertexAttribArray(2);
-
-	// note that this is allowed, the call to glVertexAttribPointer registered VBO as the vertex attribute's bound vertex buffer object so afterwards we can safely unbind.
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-	// You can unbind the VAO afterwards so other VAO calls won't accidentally modify this VAO, but this rarely happens. Modifying other
-	// VAOs requires a call to glBindVertexArray anyways so we generally don't unbind VAOs (nor VBOs) when it's not directly necessary.
-	glBindVertexArray(0);
-
 	glEnable(GL_DEPTH_TEST);
 
 	// Lighting cube.
@@ -256,6 +181,7 @@ void initBuffers()
 
 	// we only need to bind to the VBO, the container’s VBO’s data already contains the correct data.
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
 	// set the vertex attributes (only position data for our lamp).
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
@@ -271,15 +197,15 @@ void update()
 
 void render()
 {
-	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+	glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	// Draw Lamp.
 	lamp_shader.use();
 
-	glm::mat4 model;
+	glm::mat4 modelMat;
 	glm::mat4 view = camera.GetViewMatrix();
-	glm::mat4 projection = glm::perspective(glm::radians(camera.getZoom()), (float)screenWidth / (float)screenHeight, 0.1f, 100.0f);
+	glm::mat4 projection = glm::perspective(glm::radians(camera.getZoom()), (float)screenWidth / (float)screenHeight, 0.1f, 5000.0f);
 
 	glBindVertexArray(lightVAO);
 
@@ -293,11 +219,11 @@ void render()
 
 	for (int i = 0; i < 4; ++i)
 	{
-		model = glm::mat4();
-		model = glm::translate(model, pointLightPositions[i]);
-		model = glm::scale(model, glm::vec3(0.2f));
+		modelMat = glm::mat4();
+		modelMat = glm::translate(modelMat, pointLightPositions[i]);
+		modelMat = glm::scale(modelMat, glm::vec3(0.2f));
 
-		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelMat));
 
 		glDrawArrays(GL_TRIANGLES, 0, 36);
 	}
@@ -345,27 +271,21 @@ void render()
 	basic_shader.setFloat("spotLight.cutOff", glm::cos(glm::radians(12.5f)));
 	basic_shader.setFloat("spotLight.outerCutOff", glm::cos(glm::radians(15.0f)));
 
+	/*
 	basic_shader.setInt("material.diffuse", 0);
 	basic_shader.setInt("material.specular", 1);
-	basic_shader.setFloat("material.shininess", 32.0f);
+	basic_shader.setFloat("material.shininess", 32.0f);*/
 
-	basic_shader.setVec3("objectColor", 1.0f, 0.5f, 0.31f);
+	//basic_shader.setVec3("objectColor", 1.0f, 0.5f, 0.31f);
 	basic_shader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
 	basic_shader.setVec3("viewPos", camera.getPosition());
 
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, diffuseMap);
-
-	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, specularMap);
-
-	model = glm::mat4();
-	model = glm::rotate(model, glm::radians(30.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-
-	glBindVertexArray(cubeVAO);
+	modelMat = glm::mat4();
+	//modelMat = glm::rotate(modelMat, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+	modelMat = glm::scale(modelMat, glm::vec3(0.1f, 0.1f, 0.1f));
 
 	modelLoc = glGetUniformLocation(basic_shader.getShaderProgram(), "model");
-	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelMat));
 
 	viewLoc = glGetUniformLocation(basic_shader.getShaderProgram(), "view");
 	glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
@@ -373,14 +293,11 @@ void render()
 	projLoc = glGetUniformLocation(basic_shader.getShaderProgram(), "projection");
 	glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
 
-	//glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-	glDrawArrays(GL_TRIANGLES, 0, 36);
-	glBindVertexArray(0);
+	model.Draw(basic_shader);
 }
 
 void clearBuffers()
 {
-	glDeleteVertexArrays(1, &cubeVAO);
 	glDeleteVertexArrays(1, &lightVAO);
 	glDeleteBuffers(1, &VBO);
 }

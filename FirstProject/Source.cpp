@@ -5,6 +5,7 @@
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow *window);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
+void mouse_click_callback(GLFWwindow* window, int button, int action, int mods);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 
 void init();
@@ -89,6 +90,7 @@ float deltaTime = 0.0f; // Time between current frame and last frame
 float lastFrame = 0.0f; // Time of last frame
 float lastMouseX = 400, lastMouseY = 300;
 bool firstMouseUse = true;
+bool lbutton_down = false;
 
 int main()
 {
@@ -119,10 +121,11 @@ int main()
 
 	glViewport(0, 0, screenWidth, screenHeight);
 
-	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	//glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 	glfwSetCursorPosCallback(window, mouse_callback);
+	glfwSetMouseButtonCallback(window, mouse_click_callback);
 	glfwSetScrollCallback(window, scroll_callback);
 	
 	init();
@@ -235,10 +238,10 @@ void render()
 	// Wireframe mode.
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
-	basic_shader.setVec3("dirLight.direction", -0.2f, -1.0f, -0.3f);
-	basic_shader.setVec3("dirLight.ambient", 0.05f, 0.05f, 0.05f);
-	basic_shader.setVec3("dirLight.diffuse", 0.4f, 0.4f, 0.4f);
-	basic_shader.setVec3("dirLight.specular", 0.5f, 0.5f, 0.5f);
+	basic_shader.setVec3("dirLight[0].direction", -0.2f, -1.0f, -0.3f);
+	basic_shader.setVec3("dirLight[0].ambient", 0.05f, 0.05f, 0.05f);
+	basic_shader.setVec3("dirLight[0].diffuse", 0.4f, 0.4f, 0.4f);
+	basic_shader.setVec3("dirLight[0].specular", 0.5f, 0.5f, 0.5f);
 
 	for (int i = 0; i < 4; ++i)
 	{
@@ -259,25 +262,22 @@ void render()
 		param = var + "quadratic";
 		basic_shader.setFloat(param.c_str(), 0.032f);
 	}
-
-	basic_shader.setVec3("spotLight.position", camera.getPosition());
-	basic_shader.setVec3("spotLight.direction", camera.getFront());
-	basic_shader.setVec3("spotLight.ambient", 0.0f, 0.0f, 0.0f);
-	basic_shader.setVec3("spotLight.diffuse", 1.0f, 1.0f, 1.0f);
-	basic_shader.setVec3("spotLight.specular", 1.0f, 1.0f, 1.0f);
-	basic_shader.setFloat("spotLight.constant", 1.0f);
-	basic_shader.setFloat("spotLight.linear", 0.09);
-	basic_shader.setFloat("spotLight.quadratic", 0.032);
-	basic_shader.setFloat("spotLight.cutOff", glm::cos(glm::radians(12.5f)));
-	basic_shader.setFloat("spotLight.outerCutOff", glm::cos(glm::radians(15.0f)));
-
 	/*
-	basic_shader.setInt("material.diffuse", 0);
-	basic_shader.setInt("material.specular", 1);
-	basic_shader.setFloat("material.shininess", 32.0f);*/
+	basic_shader.setVec3("spotLight[0].position", camera.getPosition());
+	basic_shader.setVec3("spotLight[0].direction", camera.getFront());
+	basic_shader.setVec3("spotLight[0].ambient", 0.0f, 0.0f, 0.0f);
+	basic_shader.setVec3("spotLight[0].diffuse", 1.0f, 1.0f, 1.0f);
+	basic_shader.setVec3("spotLight[0].specular", 1.0f, 1.0f, 1.0f);
+	basic_shader.setFloat("spotLight[0].constant", 1.0f);
+	basic_shader.setFloat("spotLight[0].linear", 0.09);
+	basic_shader.setFloat("spotLight[0].quadratic", 0.032);
+	basic_shader.setFloat("spotLight[0].cutOff", glm::cos(glm::radians(12.5f)));
+	basic_shader.setFloat("spotLight[0].outerCutOff", glm::cos(glm::radians(15.0f)));*/
 
-	//basic_shader.setVec3("objectColor", 1.0f, 0.5f, 0.31f);
-	basic_shader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
+	basic_shader.setInt("dirCount", 1);
+	basic_shader.setInt("pointCount", 4);
+	basic_shader.setInt("spotCount", 0);
+
 	basic_shader.setVec3("viewPos", camera.getPosition());
 
 	modelMat = glm::mat4();
@@ -333,13 +333,26 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 		firstMouseUse = false;
 	}
 
-	float xoffset = xpos - lastMouseX;
-	float yoffset = lastMouseY - ypos; // reversed since y-coordinates range from bottom to top.
+	if (lbutton_down)
+	{
+		float xoffset = xpos - lastMouseX;
+		float yoffset = lastMouseY - ypos; // reversed since y-coordinates range from bottom to top.
+
+		camera.ProcessMouseMovement(xoffset, yoffset, true);
+	}
 
 	lastMouseX = xpos;
 	lastMouseY = ypos;
+}
 
-	camera.ProcessMouseMovement(xoffset, yoffset, true);
+void mouse_click_callback(GLFWwindow* window, int button, int action, int mods)
+{
+	if (button == GLFW_MOUSE_BUTTON_LEFT) {
+		if (action == GLFW_PRESS)
+			lbutton_down = true;
+		else if (action == GLFW_RELEASE)
+			lbutton_down = false;
+	}
 }
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)

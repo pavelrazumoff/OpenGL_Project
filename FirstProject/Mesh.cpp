@@ -1,10 +1,11 @@
 #include "Mesh.h"
 
-Mesh::Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices, std::vector<Texture> textures)
+Mesh::Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices, std::vector<Texture> textures, Material material)
 {
 	this->vertices = vertices;
 	this->indices = indices;
 	this->textures = textures;
+	this->material = material;
 	setupMesh();
 }
 
@@ -38,25 +39,31 @@ void Mesh::setupMesh()
 
 void Mesh::Draw(Shader shader)
 {
-	unsigned int diffuseNr = 1;
-	unsigned int specularNr = 1;
+	unsigned int diffuseNr = 0;
+	unsigned int specularNr = 0;
 
 	for (unsigned int i = 0; i < textures.size(); i++)
 	{
 		glActiveTexture(GL_TEXTURE0 + i); // activate proper texture unit before binding.
 		// retrieve texture number (the N in diffuse_textureN)
-		std::stringstream ss;
 		std::string number;
 		std::string name = textures[i].type;
 		if (name == "texture_diffuse")
-			ss << diffuseNr++; // transfer unsigned int to stream
+			number = std::to_string(++diffuseNr); // transfer unsigned int to stream
 		else if (name == "texture_specular")
-			ss << specularNr++; // transfer unsigned int to stream
-		number = ss.str();
-		//shader.setFloat(("material." + name + number).c_str(), i);
-		glUniform1i(glGetUniformLocation(shader.getShaderProgram(), (name + number).c_str()), i);
+			number = std::to_string(++specularNr); // transfer unsigned int to stream
+
+		shader.setFloat(("material." + name + number).c_str(), i);
+		//glUniform1i(glGetUniformLocation(shader.getShaderProgram(), (name + number).c_str()), i);
 		glBindTexture(GL_TEXTURE_2D, textures[i].id);
 	}
+
+	shader.setBool("material.use_texture_diffuse", diffuseNr > 0);
+	shader.setBool("material.use_texture_specular", specularNr > 0);
+
+	shader.setVec3("material.diffuse_color", material.diffuse_color);
+	shader.setVec3("material.specular_color", material.specular_color);
+	shader.setFloat("material.shininess", material.shininess);
 
 	glActiveTexture(GL_TEXTURE0);
 	// draw mesh

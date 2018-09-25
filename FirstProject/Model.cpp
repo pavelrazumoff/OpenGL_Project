@@ -47,6 +47,7 @@ Mesh* Model::processMesh(aiMesh *mesh, const aiScene *scene)
 	std::vector<Vertex> vertices;
 	std::vector<unsigned int> indices;
 	std::vector<Texture> textures;
+	Material m_material;
 	for (unsigned int i = 0; i < mesh->mNumVertices; i++)
 	{
 		Vertex vertex;
@@ -89,15 +90,24 @@ Mesh* Model::processMesh(aiMesh *mesh, const aiScene *scene)
 	if (mesh->mMaterialIndex >= 0)
 	{
 		aiMaterial *material = scene->mMaterials[mesh->mMaterialIndex];
-
+		
 		std::vector<Texture> diffuseMaps = loadMaterialTextures(material, aiTextureType_DIFFUSE, "texture_diffuse");
 		textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
 
 		std::vector<Texture> specularMaps = loadMaterialTextures(material, aiTextureType_SPECULAR, "texture_specular");
 		textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
+		
+		aiColor4D mat_color;
+
+		if (AI_SUCCESS == aiGetMaterialColor(material, AI_MATKEY_COLOR_DIFFUSE, &mat_color))
+			m_material.diffuse_color = glm::vec3(mat_color.r, mat_color.g, mat_color.b);
+		if (AI_SUCCESS == aiGetMaterialColor(material, AI_MATKEY_COLOR_SPECULAR, &mat_color))
+			m_material.specular_color = glm::vec3(mat_color.r, mat_color.g, mat_color.b);
+		if (AI_SUCCESS == aiGetMaterialColor(material, AI_MATKEY_SHININESS, &mat_color))
+			m_material.shininess = mat_color.r;
 	}
 
-	return new Mesh(vertices, indices, textures);
+	return new Mesh(vertices, indices, textures, m_material);
 }
 
 std::vector<Texture> Model::loadMaterialTextures(aiMaterial *mat, aiTextureType type, std::string typeName)

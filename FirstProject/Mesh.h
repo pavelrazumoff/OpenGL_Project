@@ -13,15 +13,22 @@ struct Texture {
 	aiString path; // we store the path of the texture to compare with other textures.
 };
 
+struct Material {
+	glm::vec3 diffuse_color;
+	glm::vec3 specular_color;
+	float shininess = 32;
+};
+
 class Mesh {
 public:
-	Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices, std::vector<Texture> textures);
+	Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices, std::vector<Texture> textures, Material material);
 	~Mesh();
 
 	/* Mesh Data */
 	std::vector<Vertex> vertices;
 	std::vector<unsigned int> indices;
 	std::vector<Texture> textures;
+	Material material;
 
 	/* Functions */
 	void Draw(Shader shader);

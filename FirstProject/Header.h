@@ -17,3 +17,5 @@
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
+
+unsigned int loadCubemap(std::vector<std::string> faces);

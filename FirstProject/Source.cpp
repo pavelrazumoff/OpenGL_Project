@@ -10,6 +10,7 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 
 void init();
 void loadShaders();
+void loadTextures();
 void initBuffers();
 void clearBuffers();
 void update();
@@ -73,6 +74,51 @@ float quadVertices[] = { // vertex attributes for a quad that fills the entire s
 	 1.0f,  1.0f,  1.0f, 1.0f
 };
 
+float skyboxVertices[] = {
+	// positions          
+	-1.0f,  1.0f, -1.0f,
+	-1.0f, -1.0f, -1.0f,
+	 1.0f, -1.0f, -1.0f,
+	 1.0f, -1.0f, -1.0f,
+	 1.0f,  1.0f, -1.0f,
+	-1.0f,  1.0f, -1.0f,
+
+	-1.0f, -1.0f,  1.0f,
+	-1.0f, -1.0f, -1.0f,
+	-1.0f,  1.0f, -1.0f,
+	-1.0f,  1.0f, -1.0f,
+	-1.0f,  1.0f,  1.0f,
+	-1.0f, -1.0f,  1.0f,
+
+	 1.0f, -1.0f, -1.0f,
+	 1.0f, -1.0f,  1.0f,
+	 1.0f,  1.0f,  1.0f,
+	 1.0f,  1.0f,  1.0f,
+	 1.0f,  1.0f, -1.0f,
+	 1.0f, -1.0f, -1.0f,
+
+	-1.0f, -1.0f,  1.0f,
+	-1.0f,  1.0f,  1.0f,
+	 1.0f,  1.0f,  1.0f,
+	 1.0f,  1.0f,  1.0f,
+	 1.0f, -1.0f,  1.0f,
+	-1.0f, -1.0f,  1.0f,
+
+	-1.0f,  1.0f, -1.0f,
+	 1.0f,  1.0f, -1.0f,
+	 1.0f,  1.0f,  1.0f,
+	 1.0f,  1.0f,  1.0f,
+	-1.0f,  1.0f,  1.0f,
+	-1.0f,  1.0f, -1.0f,
+
+	-1.0f, -1.0f, -1.0f,
+	-1.0f, -1.0f,  1.0f,
+	 1.0f, -1.0f, -1.0f,
+	 1.0f, -1.0f, -1.0f,
+	-1.0f, -1.0f,  1.0f,
+	 1.0f, -1.0f,  1.0f
+};
+
 unsigned int indices[] = { // note that we start from 0!
 	0, 1, 3, // first triangle
 	1, 2, 3 // second triangle
@@ -85,15 +131,17 @@ unsigned int texColorBuffer;
 unsigned int rbo;
 
 unsigned int lightVAO;
-
 unsigned int quadVAO, quadVBO;
+unsigned int skyboxVAO, skyboxVBO;
 
 unsigned int diffuseMap;
 unsigned int specularMap;
+unsigned int cubemapTexture;
 
 Shader basic_shader;
 Shader lamp_shader;
 Shader screen_shader;
+Shader skybox_shader;
 
 Camera camera;
 Model model;
@@ -182,6 +230,7 @@ void init()
 	//stbi_set_flip_vertically_on_load(true);
 
 	loadShaders();
+	loadTextures();
 	initBuffers();
 
 	model.loadModel("Models//house_01.obj");
@@ -192,6 +241,21 @@ void loadShaders()
 	basic_shader.load("Shaders//Basic//VertexShader.glsl", "Shaders//Basic//FragmentShader.glsl");
 	lamp_shader.load("Shaders//Lamp//LampVS.glsl", "Shaders//Lamp//LampFS.glsl");
 	screen_shader.load("Shaders//Screen//ScreenShaderVS.glsl", "Shaders//Screen//ScreenShaderFS.glsl");
+	skybox_shader.load("Shaders//Skybox//SkyboxShaderVS.glsl", "Shaders//Skybox//SkyboxShaderFS.glsl");
+}
+
+void loadTextures()
+{
+	std::vector<std::string> faces = {
+		"Images//Skybox//right.jpg",
+		"Images//Skybox//left.jpg",
+		"Images//Skybox//top.jpg",
+		"Images//Skybox//bottom.jpg",
+		"Images//Skybox//back.jpg",
+		"Images//Skybox//front.jpg"
+	};
+
+	cubemapTexture = loadCubemap(faces);
 }
 
 void initBuffers()
@@ -221,6 +285,15 @@ void initBuffers()
 	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(1);
 	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
+
+	// skybox VAO
+	glGenVertexArrays(1, &skyboxVAO);
+	glGenBuffers(1, &skyboxVBO);
+	glBindVertexArray(skyboxVAO);
+	glBindBuffer(GL_ARRAY_BUFFER, skyboxVBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), &skyboxVertices, GL_STATIC_DRAW);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 
 	// generate Framebuffer.
 	glGenFramebuffers(1, &framebuffer);
@@ -363,6 +436,26 @@ void render()
 
 	model.Draw(basic_shader);
 
+	// draw skybox as last.
+	glDepthFunc(GL_LEQUAL);  // change depth function so depth test passes when values are equal to depth buffer's content.
+
+	skybox_shader.use();
+
+	view = glm::mat4(glm::mat3(camera.GetViewMatrix())); // remove translation from the view matrix.
+
+	skybox_shader.setMat4("view", view);
+	skybox_shader.setMat4("projection", projection);
+
+	// skybox cube
+	glBindVertexArray(skyboxVAO);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
+
+	glDrawArrays(GL_TRIANGLES, 0, 36);
+
+	glBindVertexArray(0);
+	glDepthFunc(GL_LESS); // set depth function back to default.
+
 	// second render framebuffer as texture for post-processing.
 	glBindFramebuffer(GL_FRAMEBUFFER, 0); // back to default
 	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
@@ -380,7 +473,10 @@ void clearBuffers()
 {
 	glDeleteVertexArrays(1, &lightVAO);
 	glDeleteVertexArrays(1, &quadVAO);
+	glDeleteVertexArrays(1, &skyboxVAO);
 	glDeleteBuffers(1, &VBO);
+	glDeleteBuffers(1, &quadVBO);
+	glDeleteBuffers(1, &skyboxVBO);
 }
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)

@@ -25,6 +25,9 @@
     <Filter Include="Shaders\Screen">
       <UniqueIdentifier>{655d0a13-c94d-44a8-897a-3680c6dbe41b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Shaders\Skybox">
+      <UniqueIdentifier>{17dd247e-9363-424c-a61e-d7b49d2579ca}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="glad.c">
@@ -90,6 +93,12 @@
     </None>
     <None Include="Shaders\Screen\ScreenShaderFS.glsl">
       <Filter>Shaders\Screen</Filter>
+    </None>
+    <None Include="Shaders\Skybox\SkyboxShaderVS.glsl">
+      <Filter>Shaders\Skybox</Filter>
+    </None>
+    <None Include="Shaders\Skybox\SkyboxShaderFS.glsl">
+      <Filter>Shaders\Skybox</Filter>
     </None>
   </ItemGroup>
 </Project>

@@ -22,6 +22,9 @@
     <Filter Include="Shaders\Lamp">
       <UniqueIdentifier>{fa93af06-343c-40dd-a99f-82e618674467}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Shaders\Screen">
+      <UniqueIdentifier>{655d0a13-c94d-44a8-897a-3680c6dbe41b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="glad.c">
@@ -81,6 +84,12 @@
     </None>
     <None Include="Shaders\Lamp\LampVS.glsl">
       <Filter>Shaders\Lamp</Filter>
+    </None>
+    <None Include="Shaders\Screen\ScreenShaderVS.glsl">
+      <Filter>Shaders\Screen</Filter>
+    </None>
+    <None Include="Shaders\Screen\ScreenShaderFS.glsl">
+      <Filter>Shaders\Screen</Filter>
     </None>
   </ItemGroup>
 </Project>

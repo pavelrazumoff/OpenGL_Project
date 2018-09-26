@@ -61,8 +61,8 @@ void Mesh::Draw(Shader shader)
 	shader.setBool("material.use_texture_diffuse", diffuseNr > 0);
 	shader.setBool("material.use_texture_specular", specularNr > 0);
 
-	shader.setVec3("material.diffuse_color", material.diffuse_color);
-	shader.setVec3("material.specular_color", material.specular_color);
+	shader.setVec4("material.diffuse_color", material.diffuse_color);
+	shader.setVec4("material.specular_color", material.specular_color);
 	shader.setFloat("material.shininess", material.shininess);
 
 	glActiveTexture(GL_TEXTURE0);

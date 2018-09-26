@@ -143,6 +143,8 @@
     <None Include="Shaders\Basic\VertexShader.glsl" />
     <None Include="Shaders\Lamp\LampFS.glsl" />
     <None Include="Shaders\Lamp\LampVS.glsl" />
+    <None Include="Shaders\Screen\ScreenShaderFS.glsl" />
+    <None Include="Shaders\Screen\ScreenShaderVS.glsl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

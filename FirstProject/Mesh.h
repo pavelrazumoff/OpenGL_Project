@@ -14,8 +14,8 @@ struct Texture {
 };
 
 struct Material {
-	glm::vec3 diffuse_color;
-	glm::vec3 specular_color;
+	glm::vec4 diffuse_color;
+	glm::vec4 specular_color;
 	float shininess = 32;
 };
 

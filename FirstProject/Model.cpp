@@ -100,9 +100,9 @@ Mesh* Model::processMesh(aiMesh *mesh, const aiScene *scene)
 		aiColor4D mat_color;
 
 		if (AI_SUCCESS == aiGetMaterialColor(material, AI_MATKEY_COLOR_DIFFUSE, &mat_color))
-			m_material.diffuse_color = glm::vec3(mat_color.r, mat_color.g, mat_color.b);
+			m_material.diffuse_color = glm::vec4(mat_color.r, mat_color.g, mat_color.b, mat_color.a);
 		if (AI_SUCCESS == aiGetMaterialColor(material, AI_MATKEY_COLOR_SPECULAR, &mat_color))
-			m_material.specular_color = glm::vec3(mat_color.r, mat_color.g, mat_color.b);
+			m_material.specular_color = glm::vec4(mat_color.r, mat_color.g, mat_color.b, mat_color.a);
 		if (AI_SUCCESS == aiGetMaterialColor(material, AI_MATKEY_SHININESS, &mat_color))
 			m_material.shininess = mat_color.r;
 	}
@@ -165,8 +165,8 @@ unsigned int TextureFromFile(const char *path, const std::string &directory, boo
 		glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
 		glGenerateMipmap(GL_TEXTURE_2D);
 
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 

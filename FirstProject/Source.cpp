@@ -16,6 +16,9 @@ void clearBuffers();
 void update();
 void render();
 
+void generateFramebuffer(unsigned int* FBO, unsigned int* texBuffer, unsigned int* RBO, bool useMultisampling);
+void resizeFramebuffer(unsigned int FBO, unsigned int texBuffer, unsigned int RBO, bool useMultisampling);
+
 int screenWidth, screenHeight;
 
 float vertices[] = {
@@ -126,9 +129,9 @@ unsigned int indices[] = { // note that we start from 0!
 
 unsigned int VBO;
 unsigned int EBO;
-unsigned int framebuffer;
-unsigned int texColorBuffer;
-unsigned int rbo;
+unsigned int framebuffer, intermediateFBO;
+unsigned int texColorMSBuffer, screenTexture;
+unsigned int rbo, intermediateRBO;
 
 unsigned int lightVAO;
 unsigned int quadVAO, quadVBO;
@@ -177,6 +180,8 @@ int main()
 
 	screenWidth = 1300;
 	screenHeight = 760;
+
+	//glfwWindowHint(GLFW_SAMPLES, 4);
 
 	GLFWwindow* window = glfwCreateWindow(screenWidth, screenHeight, "LearnOpenGL", NULL, NULL);
 	if (window == NULL)
@@ -233,6 +238,7 @@ void init()
 
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
+	glEnable(GL_MULTISAMPLE);
 	//uncomment it if not using models loading.
 	//stbi_set_flip_vertically_on_load(true);
 
@@ -309,35 +315,8 @@ void initBuffers()
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 
 	// generate Framebuffer.
-	glGenFramebuffers(1, &framebuffer);
-	glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
-
-	// generate texture.
-	glGenTextures(1, &texColorBuffer);
-	glBindTexture(GL_TEXTURE_2D, texColorBuffer);
-
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, screenWidth, screenHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-	glBindTexture(GL_TEXTURE_2D, 0);
-	// attach it to currently bound framebuffer object.
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texColorBuffer, 0);
-
-	// generate Renderbuffer.
-	glGenRenderbuffers(1, &rbo);
-	glBindRenderbuffer(GL_RENDERBUFFER, rbo);
-
-	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, screenWidth, screenHeight);
-	glBindRenderbuffer(GL_RENDERBUFFER, 0);
-
-	// attach it to currently bound framebuffer object.
-	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo);
-
-	// check for complition.
-	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-		std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	generateFramebuffer(&framebuffer, &texColorMSBuffer, &rbo, true);
+	generateFramebuffer(&intermediateFBO, &screenTexture, &intermediateRBO, false);
 
 	// configure a uniform buffer object
 	// ---------------------------------
@@ -389,6 +368,56 @@ void initBuffers()
 		// 4. now add to list of matrices
 		modelMatrices[i] = model;
 	}
+}
+
+void generateFramebuffer(unsigned int* FBO, unsigned int* texBuffer, unsigned int* RBO, bool useMultisampling)
+{
+	glGenFramebuffers(1, FBO);
+	glBindFramebuffer(GL_FRAMEBUFFER, *FBO);
+
+	// generate texture.
+	glGenTextures(1, texBuffer);
+
+	if (!useMultisampling)
+	{
+		glBindTexture(GL_TEXTURE_2D, *texBuffer);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, screenWidth, screenHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+		glBindTexture(GL_TEXTURE_2D, 0);
+		// attach it to currently bound framebuffer object.
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, *texBuffer, 0);
+	}
+	else
+	{
+		glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, *texBuffer);
+		glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 4, GL_RGB, screenWidth, screenHeight, GL_TRUE);
+
+		glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0);
+		// attach it to currently bound framebuffer object.
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, *texBuffer, 0);
+	}
+
+	// generate Renderbuffer.
+	glGenRenderbuffers(1, RBO);
+	glBindRenderbuffer(GL_RENDERBUFFER, *RBO);
+
+	if (!useMultisampling)
+		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, screenWidth, screenHeight);
+	else
+		glRenderbufferStorageMultisample(GL_RENDERBUFFER, 4, GL_DEPTH24_STENCIL8, screenWidth, screenHeight);
+
+	glBindRenderbuffer(GL_RENDERBUFFER, 0);
+
+	// attach it to currently bound framebuffer object.
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, *RBO);
+
+	// check for complition.
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+		std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 void update()
@@ -522,6 +551,11 @@ void render()
 	glDepthFunc(GL_LESS); // set depth function back to default.
 
 	// second render framebuffer as texture for post-processing.
+	// blit multisampled buffer(s) to normal colorbuffer of intermediate FBO. Image is stored in screenTexture.
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, framebuffer);
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, intermediateFBO);
+	glBlitFramebuffer(0, 0, screenWidth, screenHeight, 0, 0, screenWidth, screenHeight, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+
 	glBindFramebuffer(GL_FRAMEBUFFER, 0); // back to default
 	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
@@ -530,12 +564,14 @@ void render()
 
 	glBindVertexArray(quadVAO);
 	glDisable(GL_DEPTH_TEST);
-	glBindTexture(GL_TEXTURE_2D, texColorBuffer);
+	glBindTexture(GL_TEXTURE_2D, screenTexture);
 	glDrawArrays(GL_TRIANGLES, 0, 6);
 }
 
 void clearBuffers()
 {
+	glDeleteFramebuffers(1, &intermediateFBO);
+	glDeleteFramebuffers(1, &framebuffer);
 	glDeleteVertexArrays(1, &lightVAO);
 	glDeleteVertexArrays(1, &quadVAO);
 	glDeleteVertexArrays(1, &skyboxVAO);
@@ -553,19 +589,34 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 	screenWidth = width;
 	screenHeight = height;
 
+	resizeFramebuffer(framebuffer, texColorMSBuffer, rbo, true);
+	resizeFramebuffer(intermediateFBO, screenTexture, intermediateRBO, false);
+}
+
+void resizeFramebuffer(unsigned int FBO, unsigned int texBuffer, unsigned int RBO, bool useMultisampling)
+{
 	// Resize framebuffer.
-	glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+	glBindFramebuffer(GL_FRAMEBUFFER, FBO);
 
-	glBindTexture(GL_TEXTURE_2D, texColorBuffer);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, screenWidth, screenHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
-	glBindTexture(GL_TEXTURE_2D, 0);
+	if (!useMultisampling)
+	{
+		glBindTexture(GL_TEXTURE_2D, texBuffer);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, screenWidth, screenHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+		glBindTexture(GL_TEXTURE_2D, 0);
 
-	glBindRenderbuffer(GL_RENDERBUFFER, rbo);
+		glBindRenderbuffer(GL_RENDERBUFFER, RBO);
+		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, screenWidth, screenHeight);
+		glBindRenderbuffer(GL_RENDERBUFFER, 0);
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	}
+	else
+	{
+		glDeleteTextures(1, &texColorMSBuffer);
+		glDeleteRenderbuffers(1, &rbo);
+		glDeleteFramebuffers(1, &framebuffer);
 
-	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, screenWidth, screenHeight);
-	glBindRenderbuffer(GL_RENDERBUFFER, 0);
-
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		generateFramebuffer(&framebuffer, &texColorMSBuffer, &rbo, true);
+	}
 }
 
 void processInput(GLFWwindow *window)

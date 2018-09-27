@@ -147,6 +147,11 @@ Shader skybox_shader;
 
 Camera camera;
 Model model;
+Model planet;
+Model rock;
+
+unsigned int amount = 50000;
+glm::mat4* modelMatrices = NULL;
 
 glm::vec3 pointLightPositions[] = {
 	glm::vec3(0.7f, 0.2f, 2.0f),
@@ -236,6 +241,10 @@ void init()
 	initBuffers();
 
 	model.loadModel("Models//house_01.obj");
+	planet.loadModel("Models//planet.obj");
+	rock.loadModel("Models//rock.obj");
+
+	rock.setInstancesTransforms(modelMatrices, amount);
 }
 
 void loadShaders()
@@ -349,6 +358,37 @@ void initBuffers()
 	glBindBuffer(GL_UNIFORM_BUFFER, 0);
 	// define the range of the buffer that links to a uniform binding point
 	glBindBufferRange(GL_UNIFORM_BUFFER, 0, uboMatrices, 0, 2 * sizeof(glm::mat4));
+
+	// generate a large list of semi-random model transformation matrices
+	// ------------------------------------------------------------------
+	modelMatrices = new glm::mat4[amount];
+	srand(glfwGetTime()); // initialize random seed.
+	float radius = 150.0;
+	float offset = 25.0f;
+	for (unsigned int i = 0; i < amount; i++)
+	{
+		glm::mat4 model;
+		// 1. translation: displace along circle with 'radius' in range [-offset, offset]
+		float angle = (float)i / (float)amount * 360.0f;
+		float displacement = (rand() % (int)(2 * offset * 100)) / 100.0f - offset;
+		float x = sin(angle) * radius + displacement;
+		displacement = (rand() % (int)(2 * offset * 100)) / 100.0f - offset;
+		float y = displacement * 0.4f; // keep height of asteroid field smaller compared to width of x and z
+		displacement = (rand() % (int)(2 * offset * 100)) / 100.0f - offset;
+		float z = cos(angle) * radius + displacement;
+		model = glm::translate(model, glm::vec3(x, y, z));
+
+		// 2. scale: Scale between 0.05 and 0.25f
+		float scale = (rand() % 20) / 100.0f + 0.05;
+		model = glm::scale(model, glm::vec3(scale));
+
+		// 3. rotation: add random rotation around a (semi)randomly picked rotation axis vector
+		float rotAngle = (rand() % 360);
+		model = glm::rotate(model, rotAngle, glm::vec3(0.4f, 0.6f, 0.8f));
+
+		// 4. now add to list of matrices
+		modelMatrices[i] = model;
+	}
 }
 
 void update()
@@ -451,6 +491,15 @@ void render()
 
 	model.Draw(basic_shader);
 
+	// draw planet
+	modelMat = glm::mat4();
+	modelMat = glm::translate(modelMat, glm::vec3(-20.0f, -3.0f, 0.0f));
+	modelMat = glm::scale(modelMat, glm::vec3(4.0f, 4.0f, 4.0f));
+	basic_shader.setMat4("model", modelMat);
+	planet.Draw(basic_shader);
+
+	rock.Draw(basic_shader, amount);
+
 	// draw skybox as last.
 	glDepthFunc(GL_LEQUAL);  // change depth function so depth test passes when values are equal to depth buffer's content.
 
@@ -493,6 +542,9 @@ void clearBuffers()
 	glDeleteBuffers(1, &VBO);
 	glDeleteBuffers(1, &quadVBO);
 	glDeleteBuffers(1, &skyboxVBO);
+
+	delete modelMatrices;
+	modelMatrices = NULL;
 }
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)

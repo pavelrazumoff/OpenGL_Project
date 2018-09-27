@@ -7,10 +7,10 @@ Model::~Model()
 	meshes.clear();
 }
 
-void Model::Draw(Shader shader)
+void Model::Draw(Shader shader, int numOfDrawCalls)
 {
 	for (unsigned int i = 0; i < meshes.size(); i++)
-		meshes[i]->Draw(shader);
+		meshes[i]->Draw(shader, numOfDrawCalls);
 }
 
 void Model::loadModel(std::string path)
@@ -25,6 +25,29 @@ void Model::loadModel(std::string path)
 
 	directory = path.substr(0, path.find_last_of('/'));
 	processNode(scene->mRootNode, scene);
+}
+
+void Model::setInstancesTransforms(glm::mat4* transforms, int size)
+{
+	// configure instanced array
+	// -------------------------
+	unsigned int buffer;
+	glGenBuffers(1, &buffer);
+	glBindBuffer(GL_ARRAY_BUFFER, buffer);
+	glBufferData(GL_ARRAY_BUFFER, size * sizeof(glm::mat4), &transforms[0], GL_STATIC_DRAW);
+
+	for (int i = 0; i < meshes.size(); ++i)
+		meshes[i]->setInstancesTransformAttributes();
+
+	setUseInstances(true);
+
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+}
+
+void Model::setUseInstances(bool use)
+{
+	for (int i = 0; i < meshes.size(); ++i)
+		meshes[i]->setUseInstances(use);
 }
 
 void Model::processNode(aiNode *node, const aiScene *scene)

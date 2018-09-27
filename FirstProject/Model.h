@@ -15,7 +15,9 @@ public:
 
 	/* Functions */
 	void loadModel(std::string path);
-	void Draw(Shader shader);
+	void setInstancesTransforms(glm::mat4* transforms, int size);
+	void setUseInstances(bool use);
+	void Draw(Shader shader, int numOfDrawCalls = 1);
 
 private:
 	/* Model Data */

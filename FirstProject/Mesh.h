@@ -31,10 +31,13 @@ public:
 	Material material;
 
 	/* Functions */
-	void Draw(Shader shader);
+	void Draw(Shader shader, int numOfDrawCalls = 1);
+	void setInstancesTransformAttributes();
+	void setUseInstances(bool use);
 private:
 	/* Render data */
 	unsigned int VAO, VBO, EBO;
 	/* Functions */
 	void setupMesh();
+	bool useInstances = false;
 };

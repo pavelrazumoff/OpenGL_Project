@@ -10,6 +10,8 @@ public:
 	Shader(const char* vertexPath, const char* fragmentPath);
 
 	void load(const char* vertexPath, const char* fragmentPath);
+	void loadGeometryShader(const char* geometryPath);
+	void loadSingleShader(const char* shaderPath, std::string shaderType);
 	// use/activate the shader
 	void use();
 	// utility uniform functions

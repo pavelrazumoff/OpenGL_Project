@@ -138,6 +138,8 @@ unsigned int diffuseMap;
 unsigned int specularMap;
 unsigned int cubemapTexture;
 
+unsigned int uboMatrices;
+
 Shader basic_shader;
 Shader lamp_shader;
 Shader screen_shader;
@@ -239,6 +241,8 @@ void init()
 void loadShaders()
 {
 	basic_shader.load("Shaders//Basic//VertexShader.glsl", "Shaders//Basic//FragmentShader.glsl");
+	//basic_shader.loadGeometryShader("Shaders//Basic//GeometryShader.glsl");
+
 	lamp_shader.load("Shaders//Lamp//LampVS.glsl", "Shaders//Lamp//LampFS.glsl");
 	screen_shader.load("Shaders//Screen//ScreenShaderVS.glsl", "Shaders//Screen//ScreenShaderFS.glsl");
 	skybox_shader.load("Shaders//Skybox//SkyboxShaderVS.glsl", "Shaders//Skybox//SkyboxShaderFS.glsl");
@@ -325,6 +329,26 @@ void initBuffers()
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
 		std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	// configure a uniform buffer object
+	// ---------------------------------
+	// first. We get the relevant block indices
+	unsigned int blockBasicIndex = glGetUniformBlockIndex(basic_shader.getShaderProgram(), "Matrices");
+	unsigned int blockLampIndex = glGetUniformBlockIndex(lamp_shader.getShaderProgram(), "Matrices");
+	unsigned int blockSkyIndex = glGetUniformBlockIndex(skybox_shader.getShaderProgram(), "Matrices");
+
+	// then we link each shader's uniform block to this uniform binding point
+	glUniformBlockBinding(basic_shader.getShaderProgram(), blockBasicIndex, 0);
+	glUniformBlockBinding(basic_shader.getShaderProgram(), blockLampIndex, 0);
+	glUniformBlockBinding(basic_shader.getShaderProgram(), blockSkyIndex, 0);
+
+	// Now actually create the buffer
+	glGenBuffers(1, &uboMatrices);
+	glBindBuffer(GL_UNIFORM_BUFFER, uboMatrices);
+	glBufferData(GL_UNIFORM_BUFFER, 2 * sizeof(glm::mat4), NULL, GL_STATIC_DRAW);
+	glBindBuffer(GL_UNIFORM_BUFFER, 0);
+	// define the range of the buffer that links to a uniform binding point
+	glBindBufferRange(GL_UNIFORM_BUFFER, 0, uboMatrices, 0, 2 * sizeof(glm::mat4));
 }
 
 void update()
@@ -349,15 +373,13 @@ void render()
 	glm::mat4 view = camera.GetViewMatrix();
 	glm::mat4 projection = glm::perspective(glm::radians(camera.getZoom()), (float)screenWidth / (float)screenHeight, 0.1f, 5000.0f);
 
+	// Store uniform buffer data.
+	glBindBuffer(GL_UNIFORM_BUFFER, uboMatrices);
+	glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(projection));
+	glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(view));
+	glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
 	glBindVertexArray(lightVAO);
-
-	int modelLoc = glGetUniformLocation(lamp_shader.getShaderProgram(), "model");
-
-	int viewLoc = glGetUniformLocation(lamp_shader.getShaderProgram(), "view");
-	glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
-
-	int projLoc = glGetUniformLocation(lamp_shader.getShaderProgram(), "projection");
-	glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
 
 	for (int i = 0; i < 4; ++i)
 	{
@@ -365,7 +387,7 @@ void render()
 		modelMat = glm::translate(modelMat, pointLightPositions[i]);
 		modelMat = glm::scale(modelMat, glm::vec3(0.2f));
 
-		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelMat));
+		lamp_shader.setMat4("model", modelMat);
 
 		glDrawArrays(GL_TRIANGLES, 0, 36);
 	}
@@ -425,14 +447,7 @@ void render()
 	modelMat = glm::rotate(modelMat, glm::radians(-180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 	modelMat = glm::scale(modelMat, glm::vec3(0.05f, 0.05f, 0.05f));
 
-	modelLoc = glGetUniformLocation(basic_shader.getShaderProgram(), "model");
-	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelMat));
-
-	viewLoc = glGetUniformLocation(basic_shader.getShaderProgram(), "view");
-	glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
-
-	projLoc = glGetUniformLocation(basic_shader.getShaderProgram(), "projection");
-	glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
+	basic_shader.setMat4("model", modelMat);
 
 	model.Draw(basic_shader);
 
@@ -443,8 +458,9 @@ void render()
 
 	view = glm::mat4(glm::mat3(camera.GetViewMatrix())); // remove translation from the view matrix.
 
-	skybox_shader.setMat4("view", view);
-	skybox_shader.setMat4("projection", projection);
+	glBindBuffer(GL_UNIFORM_BUFFER, uboMatrices);
+	glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(view));
+	glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
 	// skybox cube
 	glBindVertexArray(skyboxVAO);

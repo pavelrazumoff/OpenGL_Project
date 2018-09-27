@@ -100,5 +100,8 @@
     <None Include="Shaders\Skybox\SkyboxShaderFS.glsl">
       <Filter>Shaders\Skybox</Filter>
     </None>
+    <None Include="Shaders\Basic\GeometryShader.glsl">
+      <Filter>Shaders\Basic</Filter>
+    </None>
   </ItemGroup>
 </Project>

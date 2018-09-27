@@ -7,9 +7,20 @@ out vec3 Normal;
 out vec3 FragPos;
 out vec2 TexCoords;
 
+layout (std140) uniform Matrices
+{
+    mat4 projection;
+    mat4 view;
+};
+
 uniform mat4 model;
-uniform mat4 view;
-uniform mat4 projection;
+
+// uncomment it if use geometry shader.
+//out VS_OUT {
+//	vec3 Normal;
+//	vec3 FragPos;
+//  vec2 texCoords;
+//} vs_out;
 
 void main()
 {
@@ -18,4 +29,6 @@ void main()
 	Normal = mat3(transpose(inverse(model))) * aNormal;
 	FragPos = vec3(model * vec4(aPos, 1.0));
 	TexCoords = aTexCoords;
+
+	//vs_out.texCoords = aTexCoords;
 }

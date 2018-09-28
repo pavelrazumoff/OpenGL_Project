@@ -169,6 +169,8 @@ float lastMouseX = 400, lastMouseY = 300;
 bool firstMouseUse = true;
 bool lbutton_down = false;
 
+bool useGammaCorrection = true;
+
 int main()
 {
 	glfwInit();
@@ -246,9 +248,9 @@ void init()
 	loadTextures();
 	initBuffers();
 
-	model.loadModel("Models//house_01.obj");
-	planet.loadModel("Models//planet.obj");
-	rock.loadModel("Models//rock.obj");
+	model.loadModel("Models//house_01.obj", useGammaCorrection);
+	planet.loadModel("Models//planet.obj", useGammaCorrection);
+	rock.loadModel("Models//rock.obj", useGammaCorrection);
 
 	rock.setInstancesTransforms(modelMatrices, amount);
 }
@@ -274,7 +276,7 @@ void loadTextures()
 		"Images//Skybox//front.jpg"
 	};
 
-	cubemapTexture = loadCubemap(faces);
+	cubemapTexture = loadCubemap(faces, useGammaCorrection);
 }
 
 void initBuffers()
@@ -561,6 +563,7 @@ void render()
 	glClear(GL_COLOR_BUFFER_BIT);
 
 	screen_shader.use();
+	screen_shader.setBool("gammaCorrection", useGammaCorrection);
 
 	glBindVertexArray(quadVAO);
 	glDisable(GL_DEPTH_TEST);

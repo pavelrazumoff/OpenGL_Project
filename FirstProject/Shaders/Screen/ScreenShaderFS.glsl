@@ -5,6 +5,8 @@ in vec2 TexCoords;
 
 uniform sampler2D screenTexture;
 
+uniform bool gammaCorrection;
+
 const float offset = 1.0 / 500.0;
 
 void main()
@@ -27,15 +29,22 @@ void main()
 		1.0 / 16, 2.0 / 16, 1.0 / 16
 	);
 
-	vec3 sampleTex[9];
-	for(int i = 0; i < 9; i++)
-	{
-		sampleTex[i] = vec3(texture(screenTexture, TexCoords.st + offsets[i]));
-	}
+	//vec3 sampleTex[9];
+	//for(int i = 0; i < 9; i++)
+	//{
+	//	sampleTex[i] = vec3(texture(screenTexture, TexCoords.st + offsets[i]));
+	//}
 
-	vec3 col = vec3(0.0);
-	for(int i = 0; i < 9; i++)
-		col += sampleTex[i] * kernel[i];
+	//vec3 col = vec3(0.0);
+	//for(int i = 0; i < 9; i++)
+		//col += sampleTex[i] * kernel[i];
 	//FragColor = vec4(col, 1.0);
-	FragColor = texture(screenTexture, TexCoords);
+	vec4 result = texture(screenTexture, TexCoords);
+
+	if(gammaCorrection)
+	{
+		float gamma = 2.2;
+		FragColor.rgb = pow(result.rgb, vec3(1.0/gamma));
+	}else
+		FragColor = result;
 }

@@ -123,8 +123,8 @@ vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir)
 	// diffuse shading
 	float diff = max(dot(normal, lightDir), 0.0);
 	// specular shading
-	vec3 reflectDir = reflect(-lightDir, normal);
-	float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
+	vec3 halfwayDir = normalize(lightDir + viewDir);
+	float spec = pow(max(dot(normal, halfwayDir), 0.0), material.shininess);
 
 	// combine results
 	vec3 ambient = light.ambient * vec3(mat_diff);
@@ -140,12 +140,12 @@ vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
 	// diffuse shading
 	float diff = max(dot(normal, lightDir), 0.0);
 	// specular shading
-	vec3 reflectDir = reflect(-lightDir, normal);
-	float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
+	vec3 halfwayDir = normalize(lightDir + viewDir);
+	float spec = pow(max(dot(normal, halfwayDir), 0.0), material.shininess);
 	// attenuation
-	float distance = length(light.position - fragPos);
-	float attenuation = 1.0 / (light.constant + light.linear * distance +
-	light.quadratic * (distance * distance));
+	float l_distance = length(light.position - fragPos);
+	float attenuation = 1.0 / (light.constant + light.linear * l_distance + light.quadratic * (l_distance * l_distance));
+	//float attenuation = 1.0 / (gamma ? distance * distance : distance);
 
 	// combine results
 	vec3 ambient = light.ambient * vec3(mat_diff);
@@ -165,8 +165,8 @@ vec3 CalcSpotLight(SpotLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
     // diffuse shading
     float diff = max(dot(normal, lightDir), 0.0);
     // specular shading
-    vec3 reflectDir = reflect(-lightDir, normal);
-    float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
+    vec3 halfwayDir = normalize(lightDir + viewDir);
+	float spec = pow(max(dot(normal, halfwayDir), 0.0), material.shininess);
     // attenuation
     float distance = length(light.position - fragPos);
     float attenuation = 1.0 / (light.constant + light.linear * distance + light.quadratic * (distance * distance));    

@@ -13,7 +13,7 @@ void Model::Draw(Shader shader, int numOfDrawCalls)
 		meshes[i]->Draw(shader, numOfDrawCalls);
 }
 
-void Model::loadModel(std::string path)
+void Model::loadModel(std::string path, bool gamma)
 {
 	Assimp::Importer import;
 	const aiScene *scene = import.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs);
@@ -24,6 +24,7 @@ void Model::loadModel(std::string path)
 	}
 
 	directory = path.substr(0, path.find_last_of('/'));
+	gammaCorrection = gamma;
 	processNode(scene->mRootNode, scene);
 }
 
@@ -155,7 +156,11 @@ std::vector<Texture> Model::loadMaterialTextures(aiMaterial *mat, aiTextureType 
 		{ 
 			// if texture hasn’t been loaded already, load it
 			Texture texture;
-			texture.id = TextureFromFile(str.C_Str(), directory);
+
+			if(type == aiTextureType_DIFFUSE)
+				texture.id = TextureFromFile(str.C_Str(), directory, gammaCorrection);
+			else
+				texture.id = TextureFromFile(str.C_Str(), directory, false);
 			texture.type = typeName;
 			texture.path = str;
 			textures.push_back(texture);
@@ -176,16 +181,25 @@ unsigned int TextureFromFile(const char *path, const std::string &directory, boo
 	unsigned char *data = stbi_load(filename.c_str(), &width, &height, &nrComponents, 0);
 	if (data)
 	{
-		GLenum format;
+		GLenum internalFormat;
+		GLenum dataFormat;
 		if (nrComponents == 1)
-			format = GL_RED;
+		{
+			internalFormat = dataFormat = GL_RED;
+		}
 		else if (nrComponents == 3)
-			format = GL_RGB;
+		{
+			internalFormat = gamma ? GL_SRGB : GL_RGB;
+			dataFormat = GL_RGB;
+		}
 		else if (nrComponents == 4)
-			format = GL_RGBA;
+		{
+			internalFormat = gamma ? GL_SRGB_ALPHA : GL_RGBA;
+			dataFormat = GL_RGBA;
+		}
 
 		glBindTexture(GL_TEXTURE_2D, textureID);
-		glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+		glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, dataFormat, GL_UNSIGNED_BYTE, data);
 		glGenerateMipmap(GL_TEXTURE_2D);
 
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);

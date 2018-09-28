@@ -18,4 +18,4 @@
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 
-unsigned int loadCubemap(std::vector<std::string> faces);
+unsigned int loadCubemap(std::vector<std::string> faces, bool gamma = false);

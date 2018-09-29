@@ -23,8 +23,11 @@ public:
 	void setVec4(const std::string &name, glm::vec4 value);
 	void setMat4(const std::string &name, glm::mat4 value);
 
+	void setUseOnlyDepth(bool useDepth);
 	unsigned int getShaderProgram();
+	bool getUseOnlyDepth();
 
 private:
 	unsigned int ShaderProgram;
+	bool useOnlyDepth = false;
 };

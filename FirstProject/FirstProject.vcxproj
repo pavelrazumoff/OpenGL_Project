@@ -141,7 +141,11 @@
   <ItemGroup>
     <None Include="Shaders\Basic\FragmentShader.glsl" />
     <None Include="Shaders\Basic\GeometryShader.glsl" />
+    <None Include="Shaders\Basic\ShadowDepthFS.glsl" />
+    <None Include="Shaders\Basic\ShadowDepthVS.glsl" />
     <None Include="Shaders\Basic\VertexShader.glsl" />
+    <None Include="Shaders\Debug\DebugQuadFS.glsl" />
+    <None Include="Shaders\Debug\DebugQuadVS.glsl" />
     <None Include="Shaders\Lamp\LampFS.glsl" />
     <None Include="Shaders\Lamp\LampVS.glsl" />
     <None Include="Shaders\Screen\ScreenShaderFS.glsl" />

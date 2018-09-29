@@ -67,35 +67,38 @@ void Mesh::setUseInstances(bool use)
 
 void Mesh::Draw(Shader shader, int numOfDrawCalls)
 {
-	unsigned int diffuseNr = 0;
-	unsigned int specularNr = 0;
-
-	for (unsigned int i = 0; i < textures.size(); i++)
+	if (!shader.getUseOnlyDepth())
 	{
-		glActiveTexture(GL_TEXTURE0 + i); // activate proper texture unit before binding.
-		// retrieve texture number (the N in diffuse_textureN)
-		std::string number;
-		std::string name = textures[i].type;
-		if (name == "texture_diffuse")
-			number = std::to_string(++diffuseNr); // transfer unsigned int to stream
-		else if (name == "texture_specular")
-			number = std::to_string(++specularNr); // transfer unsigned int to stream
+		unsigned int diffuseNr = 0;
+		unsigned int specularNr = 0;
 
-		shader.setFloat(("material." + name + number).c_str(), i);
-		//glUniform1i(glGetUniformLocation(shader.getShaderProgram(), (name + number).c_str()), i);
-		glBindTexture(GL_TEXTURE_2D, textures[i].id);
+		for (unsigned int i = 0; i < textures.size(); i++)
+		{
+			glActiveTexture(GL_TEXTURE0 + i); // activate proper texture unit before binding.
+			// retrieve texture number (the N in diffuse_textureN)
+			std::string number;
+			std::string name = textures[i].type;
+			if (name == "texture_diffuse")
+				number = std::to_string(++diffuseNr); // transfer unsigned int to stream
+			else if (name == "texture_specular")
+				number = std::to_string(++specularNr); // transfer unsigned int to stream
+
+			shader.setInt(("material." + name + number).c_str(), i);
+			//glUniform1i(glGetUniformLocation(shader.getShaderProgram(), (name + number).c_str()), i);
+			glBindTexture(GL_TEXTURE_2D, textures[i].id);
+		}
+
+		shader.setBool("material.use_texture_diffuse", diffuseNr > 0);
+		shader.setBool("material.use_texture_specular", specularNr > 0);
+
+		shader.setVec4("material.diffuse_color", material.diffuse_color);
+		shader.setVec4("material.specular_color", material.specular_color);
+		shader.setFloat("material.shininess", material.shininess);
 	}
-
-	shader.setBool("material.use_texture_diffuse", diffuseNr > 0);
-	shader.setBool("material.use_texture_specular", specularNr > 0);
-
-	shader.setVec4("material.diffuse_color", material.diffuse_color);
-	shader.setVec4("material.specular_color", material.specular_color);
-	shader.setFloat("material.shininess", material.shininess);
 
 	shader.setBool("useInstances", useInstances);
 
-	glActiveTexture(GL_TEXTURE0);
+	//glActiveTexture(GL_TEXTURE0);
 	// draw mesh
 	glBindVertexArray(VAO);
 	if(useInstances)

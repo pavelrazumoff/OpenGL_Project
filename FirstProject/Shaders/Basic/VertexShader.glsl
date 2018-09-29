@@ -4,9 +4,9 @@ layout (location = 1) in vec3 aNormal;
 layout (location = 2) in vec2 aTexCoords;
 layout (location = 3) in mat4 aInstanceMatrix;
 
-out vec3 Normal;
-out vec3 FragPos;
-out vec2 TexCoords;
+//out vec3 Normal;
+//out vec3 FragPos;
+//out vec2 TexCoords;
 
 layout (std140) uniform Matrices
 {
@@ -15,14 +15,15 @@ layout (std140) uniform Matrices
 };
 
 uniform mat4 model;
+uniform mat4 lightSpaceMatrix;
 uniform bool useInstances;
 
-// uncomment it if use geometry shader.
-//out VS_OUT {
-//	vec3 Normal;
-//	vec3 FragPos;
-//  vec2 texCoords;
-//} vs_out;
+out VS_OUT {
+    vec3 FragPos;
+    vec3 Normal;
+    vec2 TexCoords;
+    vec4 FragPosLightSpace;
+} vs_out;
 
 void main()
 {
@@ -31,9 +32,8 @@ void main()
 		gl_Position = projection * view * model * vec4(aPos, 1.0);
 	else
 		gl_Position = projection * view * aInstanceMatrix * vec4(aPos, 1.0f);
-	Normal = mat3(transpose(inverse(model))) * aNormal;
-	FragPos = vec3(model * vec4(aPos, 1.0));
-	TexCoords = aTexCoords;
-
-	//vs_out.texCoords = aTexCoords;
+	vs_out.Normal = transpose(inverse(mat3(model))) * aNormal;
+	vs_out.FragPos = vec3(model * vec4(aPos, 1.0));
+	vs_out.TexCoords = aTexCoords;
+	vs_out.FragPosLightSpace = lightSpaceMatrix * vec4(vs_out.FragPos, 1.0);
 }

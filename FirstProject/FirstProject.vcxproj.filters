@@ -28,6 +28,9 @@
     <Filter Include="Shaders\Skybox">
       <UniqueIdentifier>{17dd247e-9363-424c-a61e-d7b49d2579ca}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Shaders\Debug">
+      <UniqueIdentifier>{5fbb834a-7159-4278-9c5e-6fd9531df0f3}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="glad.c">
@@ -102,6 +105,18 @@
     </None>
     <None Include="Shaders\Basic\GeometryShader.glsl">
       <Filter>Shaders\Basic</Filter>
+    </None>
+    <None Include="Shaders\Basic\ShadowDepthVS.glsl">
+      <Filter>Shaders\Basic</Filter>
+    </None>
+    <None Include="Shaders\Basic\ShadowDepthFS.glsl">
+      <Filter>Shaders\Basic</Filter>
+    </None>
+    <None Include="Shaders\Debug\DebugQuadVS.glsl">
+      <Filter>Shaders\Debug</Filter>
+    </None>
+    <None Include="Shaders\Debug\DebugQuadFS.glsl">
+      <Filter>Shaders\Debug</Filter>
     </None>
   </ItemGroup>
 </Project>

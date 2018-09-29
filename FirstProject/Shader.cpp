@@ -124,6 +124,16 @@ void Shader::setMat4(const std::string &name, glm::mat4 value)
 	glUniformMatrix4fv(glGetUniformLocation(ShaderProgram, name.c_str()), 1, GL_FALSE, &value[0][0]);
 }
 
+void Shader::setUseOnlyDepth(bool useDepth)
+{
+	useOnlyDepth = useDepth;
+}
+
+bool Shader::getUseOnlyDepth()
+{
+	return useOnlyDepth;
+}
+
 unsigned int Shader::getShaderProgram()
 {
 	return ShaderProgram;

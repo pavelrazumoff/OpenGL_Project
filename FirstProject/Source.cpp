@@ -16,10 +16,13 @@ void clearBuffers();
 void update();
 void render();
 
+void drawScene(Shader shader);
+
 void generateFramebuffer(unsigned int* FBO, unsigned int* texBuffer, unsigned int* RBO, bool useMultisampling);
 void resizeFramebuffer(unsigned int FBO, unsigned int texBuffer, unsigned int RBO, bool useMultisampling);
 
 int screenWidth, screenHeight;
+int shadowWidth = 2048, shadowHeight = 2048;
 
 float vertices[] = {
 	// Back face
@@ -129,17 +132,19 @@ unsigned int indices[] = { // note that we start from 0!
 
 unsigned int VBO;
 unsigned int EBO;
-unsigned int framebuffer, intermediateFBO;
-unsigned int texColorMSBuffer, screenTexture;
+unsigned int framebuffer, intermediateFBO, depthMapFBO;
+unsigned int texColorMSBuffer, screenTexture, depthMap;
 unsigned int rbo, intermediateRBO;
 
 unsigned int lightVAO;
 unsigned int quadVAO, quadVBO;
 unsigned int skyboxVAO, skyboxVBO;
+unsigned int floorVAO;
 
 unsigned int diffuseMap;
 unsigned int specularMap;
 unsigned int cubemapTexture;
+unsigned int woodTexture;
 
 unsigned int uboMatrices;
 
@@ -147,13 +152,15 @@ Shader basic_shader;
 Shader lamp_shader;
 Shader screen_shader;
 Shader skybox_shader;
+Shader simpleDepth_shader;
+Shader debugDepthQuad;
 
 Camera camera;
 Model model;
 Model planet;
 Model rock;
 
-unsigned int amount = 50000;
+unsigned int amount = 10000;
 glm::mat4* modelMatrices = NULL;
 
 glm::vec3 pointLightPositions[] = {
@@ -259,6 +266,9 @@ void loadShaders()
 {
 	basic_shader.load("Shaders//Basic//VertexShader.glsl", "Shaders//Basic//FragmentShader.glsl");
 	//basic_shader.loadGeometryShader("Shaders//Basic//GeometryShader.glsl");
+	simpleDepth_shader.load("Shaders//Basic//ShadowDepthVS.glsl", "Shaders//Basic//ShadowDepthFS.glsl");
+	simpleDepth_shader.setUseOnlyDepth(true);
+	debugDepthQuad.load("Shaders//Debug//DebugQuadVS.glsl", "Shaders//Debug//DebugQuadFS.glsl");
 
 	lamp_shader.load("Shaders//Lamp//LampVS.glsl", "Shaders//Lamp//LampFS.glsl");
 	screen_shader.load("Shaders//Screen//ScreenShaderVS.glsl", "Shaders//Screen//ScreenShaderFS.glsl");
@@ -296,6 +306,26 @@ void initBuffers()
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
 
+	// Floor cube.
+	glGenVertexArrays(1, &floorVAO);
+	glBindVertexArray(floorVAO);
+
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+
+	// vertex positions
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+	// vertex normals
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+	// vertex texture coords
+	glEnableVertexAttribArray(2);
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+	glBindVertexArray(0);
+
+	std::string directory;
+	woodTexture = TextureFromFile("floor.jpg", "Images", useGammaCorrection);
+
 	// screen quad VAO
 	glGenVertexArrays(1, &quadVAO);
 	glGenBuffers(1, &quadVBO);
@@ -316,9 +346,28 @@ void initBuffers()
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 
-	// generate Framebuffer.
+	// generate Framebuffers.
 	generateFramebuffer(&framebuffer, &texColorMSBuffer, &rbo, true);
 	generateFramebuffer(&intermediateFBO, &screenTexture, &intermediateRBO, false);
+
+	// Shadow mapping.
+	glGenFramebuffers(1, &depthMapFBO);
+	// create depth texture
+	glGenTextures(1, &depthMap);
+	glBindTexture(GL_TEXTURE_2D, depthMap);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, shadowWidth, shadowHeight, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+	float borderColor[] = { 1.0, 1.0, 1.0, 1.0 };
+	glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
+	// attach depth texture as FBO's depth buffer
+	glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthMap, 0);
+	glDrawBuffer(GL_NONE);
+	glReadBuffer(GL_NONE);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 	// configure a uniform buffer object
 	// ---------------------------------
@@ -431,11 +480,38 @@ void update()
 
 void render()
 {
+	// Shadow mapping.
+	// 1. render depth of scene to texture (from light's perspective)
+	// --------------------------------------------------------------
+	glm::vec3 lightPos(30.0f, 20.0f, 10.0f);
+	glm::mat4 lightProjection, lightView;
+	glm::mat4 lightSpaceMatrix;
+	float near_plane = 10.0f, far_plane = 100.0f;
+	// note that if you use a perspective projection matrix you'll have to change the light position as the current light position isn't enough to reflect the whole scene.
+	//lightProjection = glm::perspective(glm::radians(45.0f), (GLfloat)shadowWidth / (GLfloat)shadowHeight, near_plane, far_plane);
+	lightProjection = glm::ortho(-40.0f, 40.0f, -40.0f, 40.0f, near_plane, far_plane);
+	lightView = glm::lookAt(lightPos, glm::vec3(0.0f), glm::vec3(0.0, 1.0, 0.0));
+	lightSpaceMatrix = lightProjection * lightView;
+	// render scene from light's point of view
+	simpleDepth_shader.use();
+	simpleDepth_shader.setMat4("lightSpaceMatrix", lightSpaceMatrix);
+	simpleDepth_shader.setBool("useInstances", false);
+
+	glViewport(0, 0, shadowWidth, shadowHeight);
+	glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+	glClear(GL_DEPTH_BUFFER_BIT);
+
+	drawScene(simpleDepth_shader);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	// reset viewport
+	glViewport(0, 0, screenWidth, screenHeight);
+
 	// first render scene in specific framebuffer.
 	glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
 	glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // we’re not using the stencil buffer now.
-	glEnable(GL_DEPTH_TEST);
 
 	// Draw Lamp.
 	lamp_shader.use();
@@ -463,14 +539,23 @@ void render()
 		glDrawArrays(GL_TRIANGLES, 0, 36);
 	}
 
-	// Draw scene.
 	// Use our shader program when we want to render an object.
 	basic_shader.use();
 
 	// Wireframe mode.
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
-	basic_shader.setVec3("dirLight[0].direction", -0.2f, -1.0f, -0.3f);
+	glm::vec3 lightDir = glm::normalize(glm::vec3(0.0f, 0.0f, 0.0f) - lightPos);
+
+	basic_shader.setBool("useInstances", false);
+	basic_shader.setBool("material.use_texture_diffuse", true);
+	basic_shader.setBool("material.use_texture_specular", false);
+
+	basic_shader.setVec4("material.diffuse_color", glm::vec4(0.3f, 0.3f, 0.3f, 1.0f));
+	basic_shader.setVec4("material.specular_color", glm::vec4(0.3f, 0.3f, 0.3f, 1.0f));
+	basic_shader.setFloat("material.shininess", 32);
+
+	basic_shader.setVec3("dirLight[0].direction", lightDir);
 	basic_shader.setVec3("dirLight[0].ambient", 0.05f, 0.05f, 0.05f);
 	basic_shader.setVec3("dirLight[0].diffuse", 0.4f, 0.4f, 0.4f);
 	basic_shader.setVec3("dirLight[0].specular", 0.5f, 0.5f, 0.5f);
@@ -494,42 +579,26 @@ void render()
 		param = var + "quadratic";
 		basic_shader.setFloat(param.c_str(), 0.032f);
 	}
-	/*
-	basic_shader.setVec3("spotLight[0].position", camera.getPosition());
-	basic_shader.setVec3("spotLight[0].direction", camera.getFront());
-	basic_shader.setVec3("spotLight[0].ambient", 0.0f, 0.0f, 0.0f);
-	basic_shader.setVec3("spotLight[0].diffuse", 1.0f, 1.0f, 1.0f);
-	basic_shader.setVec3("spotLight[0].specular", 1.0f, 1.0f, 1.0f);
-	basic_shader.setFloat("spotLight[0].constant", 1.0f);
-	basic_shader.setFloat("spotLight[0].linear", 0.09);
-	basic_shader.setFloat("spotLight[0].quadratic", 0.032);
-	basic_shader.setFloat("spotLight[0].cutOff", glm::cos(glm::radians(12.5f)));
-	basic_shader.setFloat("spotLight[0].outerCutOff", glm::cos(glm::radians(15.0f)));*/
 
 	basic_shader.setInt("dirCount", 1);
 	basic_shader.setInt("pointCount", 4);
 	basic_shader.setInt("spotCount", 0);
 
 	basic_shader.setVec3("viewPos", camera.getPosition());
+	basic_shader.setVec3("lightPos", lightPos);
+	basic_shader.setMat4("lightSpaceMatrix", lightSpaceMatrix);
+	basic_shader.setFloat("near_plane", near_plane);
+	basic_shader.setFloat("far_plane", far_plane);
 
-	// trans - rotate - scale.
-	modelMat = glm::mat4();
-	modelMat = glm::translate(modelMat, glm::vec3(5.0f, -5.0f, -10.0f));
-	modelMat = glm::rotate(modelMat, glm::radians(-180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-	modelMat = glm::scale(modelMat, glm::vec3(0.05f, 0.05f, 0.05f));
+	glActiveTexture(GL_TEXTURE0);
+	basic_shader.setInt("material.texture_diffuse1", 0);
+	glBindTexture(GL_TEXTURE_2D, woodTexture);
 
-	basic_shader.setMat4("model", modelMat);
+	glActiveTexture(GL_TEXTURE2);
+	basic_shader.setInt("shadowMap", 2);
+	glBindTexture(GL_TEXTURE_2D, depthMap);
 
-	model.Draw(basic_shader);
-
-	// draw planet
-	modelMat = glm::mat4();
-	modelMat = glm::translate(modelMat, glm::vec3(-20.0f, -3.0f, 0.0f));
-	modelMat = glm::scale(modelMat, glm::vec3(4.0f, 4.0f, 4.0f));
-	basic_shader.setMat4("model", modelMat);
-	planet.Draw(basic_shader);
-
-	rock.Draw(basic_shader, amount);
+	drawScene(basic_shader);
 
 	// draw skybox as last.
 	glDepthFunc(GL_LEQUAL);  // change depth function so depth test passes when values are equal to depth buffer's content.
@@ -569,13 +638,75 @@ void render()
 	glDisable(GL_DEPTH_TEST);
 	glBindTexture(GL_TEXTURE_2D, screenTexture);
 	glDrawArrays(GL_TRIANGLES, 0, 6);
+
+	// Uncomment it for debugging purposes.
+	// It will draw current depth map.
+	/*
+	debugDepthQuad.use();
+	debugDepthQuad.setInt("depthMap", 0);
+	debugDepthQuad.setFloat("near_plane", near_plane);
+	debugDepthQuad.setFloat("far_plane", far_plane);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, depthMap);
+
+	glBindVertexArray(quadVAO);
+	glDrawArrays(GL_TRIANGLES, 0, 6);
+	glBindVertexArray(0);*/
+
+	glEnable(GL_DEPTH_TEST);
+}
+
+void drawScene(Shader shader)
+{
+	glm::mat4 modelMat;
+
+	// Draw scene.
+	modelMat = glm::mat4();
+	modelMat = glm::translate(modelMat, glm::vec3(10.0f, -5.0f, -10.0f));
+	modelMat = glm::rotate(modelMat, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+	modelMat = glm::scale(modelMat, glm::vec3(100.0f, 100.0f, 0.1f));
+
+	glBindVertexArray(floorVAO);
+
+	shader.setMat4("model", modelMat);
+
+	glDrawArrays(GL_TRIANGLES, 0, 36);
+
+	modelMat = glm::mat4();
+	modelMat = glm::translate(modelMat, glm::vec3(10.0f, -4.5f, 10.0f));
+	modelMat = glm::scale(modelMat, glm::vec3(1.0f, 1.0f, 1.0f));
+
+	shader.setMat4("model", modelMat);
+
+	glDrawArrays(GL_TRIANGLES, 0, 36);
+
+	// trans - rotate - scale.
+	modelMat = glm::mat4();
+	modelMat = glm::translate(modelMat, glm::vec3(5.0f, -5.0f, -10.0f));
+	modelMat = glm::rotate(modelMat, glm::radians(-180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	modelMat = glm::scale(modelMat, glm::vec3(0.05f, 0.05f, 0.05f));
+
+	shader.setMat4("model", modelMat);
+
+	model.Draw(shader);
+
+	// draw planet
+	modelMat = glm::mat4();
+	modelMat = glm::translate(modelMat, glm::vec3(-20.0f, -3.0f, 0.0f));
+	modelMat = glm::scale(modelMat, glm::vec3(4.0f, 4.0f, 4.0f));
+	shader.setMat4("model", modelMat);
+	planet.Draw(shader);
+
+	rock.Draw(shader, amount);
 }
 
 void clearBuffers()
 {
+	glDeleteFramebuffers(1, &depthMapFBO);
 	glDeleteFramebuffers(1, &intermediateFBO);
 	glDeleteFramebuffers(1, &framebuffer);
 	glDeleteVertexArrays(1, &lightVAO);
+	glDeleteVertexArrays(1, &floorVAO);
 	glDeleteVertexArrays(1, &quadVAO);
 	glDeleteVertexArrays(1, &skyboxVAO);
 	glDeleteBuffers(1, &VBO);

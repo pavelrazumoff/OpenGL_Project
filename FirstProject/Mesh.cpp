@@ -34,6 +34,12 @@ void Mesh::setupMesh()
 	// vertex texture coords
 	glEnableVertexAttribArray(2);
 	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, TexCoords));
+	// vertex tangent
+	glEnableVertexAttribArray(3);
+	glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, Tangent));
+	// vertex bitangent
+	glEnableVertexAttribArray(4);
+	glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, Bitangent));
 
 	glBindVertexArray(0);
 }
@@ -43,19 +49,19 @@ void Mesh::setInstancesTransformAttributes()
 	glBindVertexArray(VAO);
 
 	// set attribute pointers for matrix (4 times vec4)
-	glEnableVertexAttribArray(3);
-	glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)0);
-	glEnableVertexAttribArray(4);
-	glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(sizeof(glm::vec4)));
 	glEnableVertexAttribArray(5);
-	glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(2 * sizeof(glm::vec4)));
+	glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)0);
 	glEnableVertexAttribArray(6);
-	glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(3 * sizeof(glm::vec4)));
+	glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(sizeof(glm::vec4)));
+	glEnableVertexAttribArray(7);
+	glVertexAttribPointer(7, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(2 * sizeof(glm::vec4)));
+	glEnableVertexAttribArray(8);
+	glVertexAttribPointer(8, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(3 * sizeof(glm::vec4)));
 
-	glVertexAttribDivisor(3, 1);
-	glVertexAttribDivisor(4, 1);
 	glVertexAttribDivisor(5, 1);
 	glVertexAttribDivisor(6, 1);
+	glVertexAttribDivisor(7, 1);
+	glVertexAttribDivisor(8, 1);
 
 	glBindVertexArray(0);
 }
@@ -71,6 +77,7 @@ void Mesh::Draw(Shader shader, int numOfDrawCalls)
 	{
 		unsigned int diffuseNr = 0;
 		unsigned int specularNr = 0;
+		unsigned int normalNr = 0;
 
 		for (unsigned int i = 0; i < textures.size(); i++)
 		{
@@ -82,6 +89,8 @@ void Mesh::Draw(Shader shader, int numOfDrawCalls)
 				number = std::to_string(++diffuseNr); // transfer unsigned int to stream
 			else if (name == "texture_specular")
 				number = std::to_string(++specularNr); // transfer unsigned int to stream
+			else if (name == "texture_normal")
+				number = std::to_string(++normalNr);
 
 			shader.setInt(("material." + name + number).c_str(), i);
 			//glUniform1i(glGetUniformLocation(shader.getShaderProgram(), (name + number).c_str()), i);
@@ -90,6 +99,7 @@ void Mesh::Draw(Shader shader, int numOfDrawCalls)
 
 		shader.setBool("material.use_texture_diffuse", diffuseNr > 0);
 		shader.setBool("material.use_texture_specular", specularNr > 0);
+		shader.setBool("material.use_texture_normal", normalNr > 0);
 
 		shader.setVec4("material.diffuse_color", material.diffuse_color);
 		shader.setVec4("material.specular_color", material.specular_color);

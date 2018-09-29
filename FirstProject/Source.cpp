@@ -177,6 +177,7 @@ bool firstMouseUse = true;
 bool lbutton_down = false;
 
 bool useGammaCorrection = true;
+bool useShadowMapping = false;
 
 int main()
 {
@@ -487,26 +488,30 @@ void render()
 	glm::mat4 lightProjection, lightView;
 	glm::mat4 lightSpaceMatrix;
 	float near_plane = 10.0f, far_plane = 100.0f;
-	// note that if you use a perspective projection matrix you'll have to change the light position as the current light position isn't enough to reflect the whole scene.
-	//lightProjection = glm::perspective(glm::radians(45.0f), (GLfloat)shadowWidth / (GLfloat)shadowHeight, near_plane, far_plane);
-	lightProjection = glm::ortho(-40.0f, 40.0f, -40.0f, 40.0f, near_plane, far_plane);
-	lightView = glm::lookAt(lightPos, glm::vec3(0.0f), glm::vec3(0.0, 1.0, 0.0));
-	lightSpaceMatrix = lightProjection * lightView;
-	// render scene from light's point of view
-	simpleDepth_shader.use();
-	simpleDepth_shader.setMat4("lightSpaceMatrix", lightSpaceMatrix);
-	simpleDepth_shader.setBool("useInstances", false);
 
-	glViewport(0, 0, shadowWidth, shadowHeight);
-	glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
-	glClear(GL_DEPTH_BUFFER_BIT);
+	if (useShadowMapping)
+	{
+		// note that if you use a perspective projection matrix you'll have to change the light position as the current light position isn't enough to reflect the whole scene.
+		//lightProjection = glm::perspective(glm::radians(45.0f), (GLfloat)shadowWidth / (GLfloat)shadowHeight, near_plane, far_plane);
+		lightProjection = glm::ortho(-40.0f, 40.0f, -40.0f, 40.0f, near_plane, far_plane);
+		lightView = glm::lookAt(lightPos, glm::vec3(0.0f), glm::vec3(0.0, 1.0, 0.0));
+		lightSpaceMatrix = lightProjection * lightView;
+		// render scene from light's point of view
+		simpleDepth_shader.use();
+		simpleDepth_shader.setMat4("lightSpaceMatrix", lightSpaceMatrix);
+		simpleDepth_shader.setBool("useInstances", false);
 
-	drawScene(simpleDepth_shader);
+		glViewport(0, 0, shadowWidth, shadowHeight);
+		glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+		glClear(GL_DEPTH_BUFFER_BIT);
 
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		drawScene(simpleDepth_shader);
 
-	// reset viewport
-	glViewport(0, 0, screenWidth, screenHeight);
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+		// reset viewport
+		glViewport(0, 0, screenWidth, screenHeight);
+	}
 
 	// first render scene in specific framebuffer.
 	glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
@@ -548,8 +553,10 @@ void render()
 	glm::vec3 lightDir = glm::normalize(glm::vec3(0.0f, 0.0f, 0.0f) - lightPos);
 
 	basic_shader.setBool("useInstances", false);
+	basic_shader.setBool("useShadowMapping", useShadowMapping);
 	basic_shader.setBool("material.use_texture_diffuse", true);
 	basic_shader.setBool("material.use_texture_specular", false);
+	basic_shader.setBool("material.use_texture_normal", false);
 
 	basic_shader.setVec4("material.diffuse_color", glm::vec4(0.3f, 0.3f, 0.3f, 1.0f));
 	basic_shader.setVec4("material.specular_color", glm::vec4(0.3f, 0.3f, 0.3f, 1.0f));
@@ -594,9 +601,12 @@ void render()
 	basic_shader.setInt("material.texture_diffuse1", 0);
 	glBindTexture(GL_TEXTURE_2D, woodTexture);
 
-	glActiveTexture(GL_TEXTURE2);
-	basic_shader.setInt("shadowMap", 2);
-	glBindTexture(GL_TEXTURE_2D, depthMap);
+	if (useShadowMapping)
+	{
+		glActiveTexture(GL_TEXTURE3);
+		basic_shader.setInt("shadowMap", 3);
+		glBindTexture(GL_TEXTURE_2D, depthMap);
+	}
 
 	drawScene(basic_shader);
 

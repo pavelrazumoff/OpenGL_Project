@@ -16,7 +16,7 @@ void Model::Draw(Shader shader, int numOfDrawCalls)
 void Model::loadModel(std::string path, bool gamma)
 {
 	Assimp::Importer import;
-	const aiScene *scene = import.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs);
+	const aiScene *scene = import.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
 	if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
 	{
 		std::cout << "ERROR::ASSIMP::" << import.GetErrorString() << std::endl;
@@ -100,6 +100,23 @@ Mesh* Model::processMesh(aiMesh *mesh, const aiScene *scene)
 		else
 			vertex.TexCoords = glm::vec2(0.0f, 0.0f);
 
+		// tangent
+		if (mesh->mTangents)
+		{
+			vector.x = mesh->mTangents[i].x;
+			vector.y = mesh->mTangents[i].y;
+			vector.z = mesh->mTangents[i].z;
+			vertex.Tangent = vector;
+		}
+		// bitangent
+		if (mesh->mBitangents)
+		{
+			vector.x = mesh->mBitangents[i].x;
+			vector.y = mesh->mBitangents[i].y;
+			vector.z = mesh->mBitangents[i].z;
+			vertex.Bitangent = vector;
+		}
+
 		vertices.push_back(vertex);
 	}
 	// process indices
@@ -120,6 +137,9 @@ Mesh* Model::processMesh(aiMesh *mesh, const aiScene *scene)
 
 		std::vector<Texture> specularMaps = loadMaterialTextures(material, aiTextureType_SPECULAR, "texture_specular");
 		textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
+
+		std::vector<Texture> normalMaps = loadMaterialTextures(material, aiTextureType_NORMALS, "texture_normal");
+		textures.insert(textures.end(), normalMaps.begin(), normalMaps.end());
 		
 		aiColor4D mat_color;
 

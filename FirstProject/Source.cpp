@@ -19,7 +19,9 @@ void render();
 void drawScene(Shader shader);
 
 void generateFramebuffer(unsigned int* FBO, unsigned int* texBuffer, unsigned int* RBO, bool useMultisampling, bool useHDR);
+void generateBloomFramebuffer(unsigned int* FBO, unsigned int* texBuffer, unsigned int* RBO, bool useHDR);
 void resizeFramebuffer(unsigned int FBO, unsigned int texBuffer, unsigned int RBO, bool useMultisampling, bool useHDR);
+void resizeBloomFramebuffer(unsigned int FBO, unsigned int texBuffer[], unsigned int RBO, bool useHDR);
 
 int screenWidth, screenHeight;
 int shadowWidth = 2048, shadowHeight = 2048;
@@ -132,9 +134,14 @@ unsigned int indices[] = { // note that we start from 0!
 
 unsigned int VBO;
 unsigned int EBO;
-unsigned int framebuffer, intermediateFBO, depthMapFBO;
+unsigned int framebuffer, intermediateFBO, finalFBO, depthMapFBO;
 unsigned int texColorMSBuffer, screenTexture, depthMap;
-unsigned int rbo, intermediateRBO;
+unsigned int rbo, intermediateRBO, finalRBO;
+
+unsigned int finalTextures[2];
+
+unsigned int pingpongFBO[2];
+unsigned int pingpongColorbuffers[2];
 
 unsigned int lightVAO;
 unsigned int quadVAO, quadVBO;
@@ -154,6 +161,8 @@ Shader screen_shader;
 Shader skybox_shader;
 Shader simpleDepth_shader;
 Shader debugDepthQuad;
+Shader final_shader;
+Shader shaderBlur;
 
 Camera camera;
 Model model;
@@ -180,6 +189,7 @@ bool useMultisampling = true;
 bool useGammaCorrection = true;
 bool useShadowMapping = false;
 bool useHDR = true;
+bool useBloom = true;
 
 int main()
 {
@@ -276,6 +286,8 @@ void loadShaders()
 	lamp_shader.load("Shaders//Lamp//LampVS.glsl", "Shaders//Lamp//LampFS.glsl");
 	screen_shader.load("Shaders//Screen//ScreenShaderVS.glsl", "Shaders//Screen//ScreenShaderFS.glsl");
 	skybox_shader.load("Shaders//Skybox//SkyboxShaderVS.glsl", "Shaders//Skybox//SkyboxShaderFS.glsl");
+	final_shader.load("Shaders//Screen//ScreenShaderVS.glsl", "Shaders//Screen//FinalShaderFS.glsl");
+	shaderBlur.load("Shaders//Blur//BlurShaderVS.glsl", "Shaders//Blur//BlurShaderFS.glsl");
 }
 
 void loadTextures()
@@ -352,6 +364,32 @@ void initBuffers()
 	// generate Framebuffers.
 	generateFramebuffer(&framebuffer, &texColorMSBuffer, &rbo, useMultisampling, useHDR);
 	generateFramebuffer(&intermediateFBO, &screenTexture, &intermediateRBO, false, useHDR);
+	generateBloomFramebuffer(&finalFBO, finalTextures, &finalRBO, useHDR);
+
+	// ping-pong-framebuffer for blurring
+	glGenFramebuffers(2, pingpongFBO);
+	glGenTextures(2, pingpongColorbuffers);
+
+	GLenum dataFormat;
+	if (useHDR)
+		dataFormat = GL_RGB16F;
+	else
+		dataFormat = GL_RGB;
+
+	for (unsigned int i = 0; i < 2; i++)
+	{
+		glBindFramebuffer(GL_FRAMEBUFFER, pingpongFBO[i]);
+		glBindTexture(GL_TEXTURE_2D, pingpongColorbuffers[i]);
+		glTexImage2D(GL_TEXTURE_2D, 0, dataFormat, screenWidth, screenHeight, 0, GL_RGB, GL_FLOAT, NULL);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE); // we clamp to the edge as the blur filter would otherwise sample repeated texture values!
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, pingpongColorbuffers[i], 0);
+		// also check if framebuffers are complete (no need for depth buffer)
+		if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+			std::cout << "Framebuffer not complete!" << std::endl;
+	}
 
 	// Shadow mapping.
 	glGenFramebuffers(1, &depthMapFBO);
@@ -434,14 +472,14 @@ void generateFramebuffer(unsigned int* FBO, unsigned int* texBuffer, unsigned in
 
 	GLenum dataFormat;
 	if (useHDR)
-		dataFormat = GL_RGBA16F;
+		dataFormat = GL_RGB16F;
 	else
 		dataFormat = GL_RGB;
 
 	if (!useMultisampling)
 	{
 		glBindTexture(GL_TEXTURE_2D, *texBuffer);
-		glTexImage2D(GL_TEXTURE_2D, 0, dataFormat, screenWidth, screenHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+		glTexImage2D(GL_TEXTURE_2D, 0, dataFormat, screenWidth, screenHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
 
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -477,6 +515,45 @@ void generateFramebuffer(unsigned int* FBO, unsigned int* texBuffer, unsigned in
 	// check for complition.
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
 		std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+void generateBloomFramebuffer(unsigned int* FBO, unsigned int* texBuffer, unsigned int* RBO, bool useHDR)
+{
+	glGenFramebuffers(1, FBO);
+	glBindFramebuffer(GL_FRAMEBUFFER, *FBO);
+
+	glGenTextures(2, texBuffer);
+
+	GLenum dataFormat;
+	if (useHDR)
+		dataFormat = GL_RGB16F;
+	else
+		dataFormat = GL_RGB;
+
+	for (unsigned int i = 0; i < 2; i++)
+	{
+		glBindTexture(GL_TEXTURE_2D, texBuffer[i]);
+		glTexImage2D(GL_TEXTURE_2D, 0, dataFormat, screenWidth, screenHeight, 0, GL_RGB, GL_FLOAT, NULL);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);  // we clamp to the edge as the blur filter would otherwise sample repeated texture values!
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		// attach texture to framebuffer
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i, GL_TEXTURE_2D, texBuffer[i], 0);
+	}
+
+	// create and attach depth buffer (renderbuffer)
+	glGenRenderbuffers(1, RBO);
+	glBindRenderbuffer(GL_RENDERBUFFER, *RBO);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, screenWidth, screenHeight);
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, *RBO);
+	// tell OpenGL which color attachments we'll use (of this framebuffer) for rendering 
+	unsigned int attachments[2] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
+	glDrawBuffers(2, attachments);
+	// finally check if framebuffer is complete
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+		std::cout << "Framebuffer not complete!" << std::endl;
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
@@ -541,6 +618,12 @@ void render()
 
 	glBindVertexArray(lightVAO);
 
+	glm::vec3 lightColors[4];
+	lightColors[0] = glm::vec3(2.0f, 2.0f, 2.0f);
+	lightColors[1] = glm::vec3(1.5f, 0.0f, 0.0f);
+	lightColors[2] = glm::vec3(0.0f, 0.0f, 1.5f);
+	lightColors[3] = glm::vec3(0.0f, 1.5f, 0.0f);
+
 	for (int i = 0; i < 4; ++i)
 	{
 		modelMat = glm::mat4();
@@ -548,6 +631,7 @@ void render()
 		modelMat = glm::scale(modelMat, glm::vec3(0.2f));
 
 		lamp_shader.setMat4("model", modelMat);
+		lamp_shader.setVec3("lightColor", lightColors[i]);
 
 		glDrawArrays(GL_TRIANGLES, 0, 36);
 	}
@@ -586,7 +670,7 @@ void render()
 		param = var + "ambient";
 		basic_shader.setVec3(param.c_str(), 0.05f, 0.05f, 0.05f);
 		param = var + "diffuse";
-		basic_shader.setVec3(param.c_str(), 0.8f, 0.8f, 0.8f);
+		basic_shader.setVec3(param.c_str(), lightColors[i]);
 		param = var + "specular";
 		basic_shader.setVec3(param.c_str(), 1.0f, 1.0f, 1.0f);
 		param = var + "constant";
@@ -647,18 +731,70 @@ void render()
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, intermediateFBO);
 	glBlitFramebuffer(0, 0, screenWidth, screenHeight, 0, 0, screenWidth, screenHeight, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
-	glBindFramebuffer(GL_FRAMEBUFFER, 0); // back to default
+	glBindFramebuffer(GL_FRAMEBUFFER, finalFBO); // back to default
 	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
+
+	// Here we have to render to final fbo with two outputs.
+	final_shader.use();
+	glBindVertexArray(quadVAO);
+	glDisable(GL_DEPTH_TEST);
+
+	final_shader.setInt("screenTexture", 0);
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, screenTexture);
+	glDrawArrays(GL_TRIANGLES, 0, 6);
+
+	// Blur here.
+	// 2. blur bright fragments with two-pass Gaussian Blur 
+	// --------------------------------------------------
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	bool horizontal = true, first_iteration = true;
+	if (useBloom)
+	{
+		unsigned int amount = 10;
+		shaderBlur.use();
+
+		for (unsigned int i = 0; i < amount; i++)
+		{
+			glBindFramebuffer(GL_FRAMEBUFFER, pingpongFBO[horizontal]);
+			shaderBlur.setInt("horizontal", horizontal);
+			shaderBlur.setInt("image", 0);
+			glBindTexture(GL_TEXTURE_2D, first_iteration ? finalTextures[1] : pingpongColorbuffers[!horizontal]);  // bind texture of other framebuffer (or scene if first iteration)
+
+			glBindVertexArray(quadVAO);
+			glDrawArrays(GL_TRIANGLES, 0, 6);
+
+			horizontal = !horizontal;
+			if (first_iteration)
+				first_iteration = false;
+		}
+	}
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	screen_shader.use();
 	screen_shader.setBool("gammaCorrection", useGammaCorrection);
 	screen_shader.setBool("useHDR", useHDR);
+	screen_shader.setInt("useBloom", useBloom);
 	screen_shader.setFloat("exposure", 1.0f);
 
+	screen_shader.setInt("screenTexture", 0);
+	screen_shader.setInt("bloomTexture", 1);
+
 	glBindVertexArray(quadVAO);
-	glDisable(GL_DEPTH_TEST);
-	glBindTexture(GL_TEXTURE_2D, screenTexture);
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, finalTextures[0]);
+
+	if (useBloom)
+	{
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, pingpongColorbuffers[!horizontal]);
+	}
 	glDrawArrays(GL_TRIANGLES, 0, 6);
 
 	// Uncomment it for debugging purposes.
@@ -724,6 +860,10 @@ void drawScene(Shader shader)
 
 void clearBuffers()
 {
+	for(int i = 0; i < 2; ++i)
+		glDeleteFramebuffers(1, &pingpongFBO[i]);
+
+	glDeleteFramebuffers(1, &finalFBO);
 	glDeleteFramebuffers(1, &depthMapFBO);
 	glDeleteFramebuffers(1, &intermediateFBO);
 	glDeleteFramebuffers(1, &framebuffer);
@@ -747,6 +887,9 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 
 	resizeFramebuffer(framebuffer, texColorMSBuffer, rbo, useMultisampling, useHDR);
 	resizeFramebuffer(intermediateFBO, screenTexture, intermediateRBO, false, useHDR);
+	resizeBloomFramebuffer(finalFBO, finalTextures, finalRBO, useHDR);
+	for(int i = 0; i < 2; ++i)
+		resizeFramebuffer(pingpongFBO[i], pingpongColorbuffers[i], -1, false, useHDR);
 }
 
 void resizeFramebuffer(unsigned int FBO, unsigned int texBuffer, unsigned int RBO, bool useMultisampling, bool useHDR)
@@ -756,19 +899,22 @@ void resizeFramebuffer(unsigned int FBO, unsigned int texBuffer, unsigned int RB
 
 	GLenum dataFormat;
 	if (useHDR)
-		dataFormat = GL_RGBA16F;
+		dataFormat = GL_RGB16F;
 	else
 		dataFormat = GL_RGB;
 
 	if (!useMultisampling)
 	{
 		glBindTexture(GL_TEXTURE_2D, texBuffer);
-		glTexImage2D(GL_TEXTURE_2D, 0, dataFormat, screenWidth, screenHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+		glTexImage2D(GL_TEXTURE_2D, 0, dataFormat, screenWidth, screenHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
 		glBindTexture(GL_TEXTURE_2D, 0);
 
-		glBindRenderbuffer(GL_RENDERBUFFER, RBO);
-		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, screenWidth, screenHeight);
-		glBindRenderbuffer(GL_RENDERBUFFER, 0);
+		if (RBO != -1)
+		{
+			glBindRenderbuffer(GL_RENDERBUFFER, RBO);
+			glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, screenWidth, screenHeight);
+			glBindRenderbuffer(GL_RENDERBUFFER, 0);
+		}
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	}
 	else
@@ -779,6 +925,30 @@ void resizeFramebuffer(unsigned int FBO, unsigned int texBuffer, unsigned int RB
 
 		generateFramebuffer(&framebuffer, &texColorMSBuffer, &rbo, useMultisampling, useHDR);
 	}
+}
+
+void resizeBloomFramebuffer(unsigned int FBO, unsigned int texBuffer[], unsigned int RBO, bool useHDR)
+{
+	// Resize framebuffer.
+	glBindFramebuffer(GL_FRAMEBUFFER, FBO);
+
+	GLenum dataFormat;
+	if (useHDR)
+		dataFormat = GL_RGB16F;
+	else
+		dataFormat = GL_RGB;
+
+	for (int i = 0; i < 2; ++i)
+	{
+		glBindTexture(GL_TEXTURE_2D, texBuffer[i]);
+		glTexImage2D(GL_TEXTURE_2D, 0, dataFormat, screenWidth, screenHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+		glBindTexture(GL_TEXTURE_2D, 0);
+	}
+
+	glBindRenderbuffer(GL_RENDERBUFFER, RBO);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, screenWidth, screenHeight);
+	glBindRenderbuffer(GL_RENDERBUFFER, 0);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 void processInput(GLFWwindow *window)

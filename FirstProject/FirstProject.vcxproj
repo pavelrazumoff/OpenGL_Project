@@ -144,10 +144,13 @@
     <None Include="Shaders\Basic\ShadowDepthFS.glsl" />
     <None Include="Shaders\Basic\ShadowDepthVS.glsl" />
     <None Include="Shaders\Basic\VertexShader.glsl" />
+    <None Include="Shaders\Blur\BlurShaderFS.glsl" />
+    <None Include="Shaders\Blur\BlurShaderVS.glsl" />
     <None Include="Shaders\Debug\DebugQuadFS.glsl" />
     <None Include="Shaders\Debug\DebugQuadVS.glsl" />
     <None Include="Shaders\Lamp\LampFS.glsl" />
     <None Include="Shaders\Lamp\LampVS.glsl" />
+    <None Include="Shaders\Screen\FinalShaderFS.glsl" />
     <None Include="Shaders\Screen\ScreenShaderFS.glsl" />
     <None Include="Shaders\Screen\ScreenShaderVS.glsl" />
     <None Include="Shaders\Skybox\SkyboxShaderFS.glsl" />

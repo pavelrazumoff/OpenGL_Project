@@ -31,6 +31,9 @@
     <Filter Include="Shaders\Debug">
       <UniqueIdentifier>{5fbb834a-7159-4278-9c5e-6fd9531df0f3}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Shaders\Blur">
+      <UniqueIdentifier>{edfa42d1-c891-417a-8319-4aa853a31ff0}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="glad.c">
@@ -117,6 +120,15 @@
     </None>
     <None Include="Shaders\Debug\DebugQuadFS.glsl">
       <Filter>Shaders\Debug</Filter>
+    </None>
+    <None Include="Shaders\Blur\BlurShaderVS.glsl">
+      <Filter>Shaders\Blur</Filter>
+    </None>
+    <None Include="Shaders\Blur\BlurShaderFS.glsl">
+      <Filter>Shaders\Blur</Filter>
+    </None>
+    <None Include="Shaders\Screen\FinalShaderFS.glsl">
+      <Filter>Shaders\Screen</Filter>
     </None>
   </ItemGroup>
 </Project>

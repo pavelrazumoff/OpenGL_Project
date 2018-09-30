@@ -6,10 +6,6 @@ layout (location = 3) in vec3 aTangent;
 layout (location = 4) in vec3 aBitangent;
 layout (location = 5) in mat4 aInstanceMatrix;
 
-//out vec3 Normal;
-//out vec3 FragPos;
-//out vec2 TexCoords;
-
 layout (std140) uniform Matrices
 {
     mat4 projection;
@@ -20,6 +16,7 @@ uniform mat4 model;
 uniform mat4 lightSpaceMatrix;
 uniform bool useInstances;
 uniform bool useShadowMapping;
+uniform vec3 viewPos;
 
 out VS_OUT {
     vec3 FragPos;
@@ -46,5 +43,11 @@ void main()
 	vec3 T = normalize(vec3(model * vec4(aTangent, 0.0)));
 	vec3 B = normalize(vec3(model * vec4(aBitangent, 0.0)));
 	vec3 N = normalize(vec3(model * vec4(aNormal, 0.0)));
-	vs_out.TBN = mat3(T, B, N);
+
+	// TBN must form a right handed coord system.
+    // Some models have symetric UVs. Check and fix.
+    if (dot(cross(N, T), B) < 0.0)
+		T = T * -1.0;
+
+    vs_out.TBN = mat3(T, B, N);
 }

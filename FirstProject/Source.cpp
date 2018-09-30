@@ -18,8 +18,8 @@ void render();
 
 void drawScene(Shader shader);
 
-void generateFramebuffer(unsigned int* FBO, unsigned int* texBuffer, unsigned int* RBO, bool useMultisampling);
-void resizeFramebuffer(unsigned int FBO, unsigned int texBuffer, unsigned int RBO, bool useMultisampling);
+void generateFramebuffer(unsigned int* FBO, unsigned int* texBuffer, unsigned int* RBO, bool useMultisampling, bool useHDR);
+void resizeFramebuffer(unsigned int FBO, unsigned int texBuffer, unsigned int RBO, bool useMultisampling, bool useHDR);
 
 int screenWidth, screenHeight;
 int shadowWidth = 2048, shadowHeight = 2048;
@@ -176,8 +176,10 @@ float lastMouseX = 400, lastMouseY = 300;
 bool firstMouseUse = true;
 bool lbutton_down = false;
 
+bool useMultisampling = true;
 bool useGammaCorrection = true;
 bool useShadowMapping = false;
+bool useHDR = true;
 
 int main()
 {
@@ -348,8 +350,8 @@ void initBuffers()
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 
 	// generate Framebuffers.
-	generateFramebuffer(&framebuffer, &texColorMSBuffer, &rbo, true);
-	generateFramebuffer(&intermediateFBO, &screenTexture, &intermediateRBO, false);
+	generateFramebuffer(&framebuffer, &texColorMSBuffer, &rbo, useMultisampling, useHDR);
+	generateFramebuffer(&intermediateFBO, &screenTexture, &intermediateRBO, false, useHDR);
 
 	// Shadow mapping.
 	glGenFramebuffers(1, &depthMapFBO);
@@ -422,7 +424,7 @@ void initBuffers()
 	}
 }
 
-void generateFramebuffer(unsigned int* FBO, unsigned int* texBuffer, unsigned int* RBO, bool useMultisampling)
+void generateFramebuffer(unsigned int* FBO, unsigned int* texBuffer, unsigned int* RBO, bool useMultisampling, bool useHDR)
 {
 	glGenFramebuffers(1, FBO);
 	glBindFramebuffer(GL_FRAMEBUFFER, *FBO);
@@ -430,10 +432,16 @@ void generateFramebuffer(unsigned int* FBO, unsigned int* texBuffer, unsigned in
 	// generate texture.
 	glGenTextures(1, texBuffer);
 
+	GLenum dataFormat;
+	if (useHDR)
+		dataFormat = GL_RGBA16F;
+	else
+		dataFormat = GL_RGB;
+
 	if (!useMultisampling)
 	{
 		glBindTexture(GL_TEXTURE_2D, *texBuffer);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, screenWidth, screenHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+		glTexImage2D(GL_TEXTURE_2D, 0, dataFormat, screenWidth, screenHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -445,7 +453,7 @@ void generateFramebuffer(unsigned int* FBO, unsigned int* texBuffer, unsigned in
 	else
 	{
 		glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, *texBuffer);
-		glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 4, GL_RGB, screenWidth, screenHeight, GL_TRUE);
+		glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 4, dataFormat, screenWidth, screenHeight, GL_TRUE);
 
 		glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0);
 		// attach it to currently bound framebuffer object.
@@ -554,9 +562,11 @@ void render()
 
 	basic_shader.setBool("useInstances", false);
 	basic_shader.setBool("useShadowMapping", useShadowMapping);
+	basic_shader.setFloat("heightScale", 0.1f);
 	basic_shader.setBool("material.use_texture_diffuse", true);
 	basic_shader.setBool("material.use_texture_specular", false);
 	basic_shader.setBool("material.use_texture_normal", false);
+	basic_shader.setBool("material.use_texture_height", false);
 
 	basic_shader.setVec4("material.diffuse_color", glm::vec4(0.3f, 0.3f, 0.3f, 1.0f));
 	basic_shader.setVec4("material.specular_color", glm::vec4(0.3f, 0.3f, 0.3f, 1.0f));
@@ -564,7 +574,7 @@ void render()
 
 	basic_shader.setVec3("dirLight[0].direction", lightDir);
 	basic_shader.setVec3("dirLight[0].ambient", 0.05f, 0.05f, 0.05f);
-	basic_shader.setVec3("dirLight[0].diffuse", 0.4f, 0.4f, 0.4f);
+	basic_shader.setVec3("dirLight[0].diffuse", 1.0f, 1.0f, 1.0f);
 	basic_shader.setVec3("dirLight[0].specular", 0.5f, 0.5f, 0.5f);
 
 	for (int i = 0; i < 4; ++i)
@@ -603,8 +613,8 @@ void render()
 
 	if (useShadowMapping)
 	{
-		glActiveTexture(GL_TEXTURE3);
-		basic_shader.setInt("shadowMap", 3);
+		glActiveTexture(GL_TEXTURE4);
+		basic_shader.setInt("shadowMap", 4);
 		glBindTexture(GL_TEXTURE_2D, depthMap);
 	}
 
@@ -643,6 +653,8 @@ void render()
 
 	screen_shader.use();
 	screen_shader.setBool("gammaCorrection", useGammaCorrection);
+	screen_shader.setBool("useHDR", useHDR);
+	screen_shader.setFloat("exposure", 1.0f);
 
 	glBindVertexArray(quadVAO);
 	glDisable(GL_DEPTH_TEST);
@@ -733,19 +745,25 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 	screenWidth = width;
 	screenHeight = height;
 
-	resizeFramebuffer(framebuffer, texColorMSBuffer, rbo, true);
-	resizeFramebuffer(intermediateFBO, screenTexture, intermediateRBO, false);
+	resizeFramebuffer(framebuffer, texColorMSBuffer, rbo, useMultisampling, useHDR);
+	resizeFramebuffer(intermediateFBO, screenTexture, intermediateRBO, false, useHDR);
 }
 
-void resizeFramebuffer(unsigned int FBO, unsigned int texBuffer, unsigned int RBO, bool useMultisampling)
+void resizeFramebuffer(unsigned int FBO, unsigned int texBuffer, unsigned int RBO, bool useMultisampling, bool useHDR)
 {
 	// Resize framebuffer.
 	glBindFramebuffer(GL_FRAMEBUFFER, FBO);
 
+	GLenum dataFormat;
+	if (useHDR)
+		dataFormat = GL_RGBA16F;
+	else
+		dataFormat = GL_RGB;
+
 	if (!useMultisampling)
 	{
 		glBindTexture(GL_TEXTURE_2D, texBuffer);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, screenWidth, screenHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+		glTexImage2D(GL_TEXTURE_2D, 0, dataFormat, screenWidth, screenHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 		glBindTexture(GL_TEXTURE_2D, 0);
 
 		glBindRenderbuffer(GL_RENDERBUFFER, RBO);
@@ -759,7 +777,7 @@ void resizeFramebuffer(unsigned int FBO, unsigned int texBuffer, unsigned int RB
 		glDeleteRenderbuffers(1, &rbo);
 		glDeleteFramebuffers(1, &framebuffer);
 
-		generateFramebuffer(&framebuffer, &texColorMSBuffer, &rbo, true);
+		generateFramebuffer(&framebuffer, &texColorMSBuffer, &rbo, useMultisampling, useHDR);
 	}
 }
 

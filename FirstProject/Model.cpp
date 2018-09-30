@@ -16,7 +16,8 @@ void Model::Draw(Shader shader, int numOfDrawCalls)
 void Model::loadModel(std::string path, bool gamma)
 {
 	Assimp::Importer import;
-	const aiScene *scene = import.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
+	const aiScene *scene = import.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs |
+		aiProcess_CalcTangentSpace | aiProcess_GenSmoothNormals);
 	if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
 	{
 		std::cout << "ERROR::ASSIMP::" << import.GetErrorString() << std::endl;
@@ -103,17 +104,19 @@ Mesh* Model::processMesh(aiMesh *mesh, const aiScene *scene)
 		// tangent
 		if (mesh->mTangents)
 		{
-			vector.x = mesh->mTangents[i].x;
-			vector.y = mesh->mTangents[i].y;
-			vector.z = mesh->mTangents[i].z;
+			aiVector3D tangents = mesh->mTangents[i].Normalize();
+			vector.x = tangents.x;
+			vector.y = tangents.y;
+			vector.z = tangents.z;
 			vertex.Tangent = vector;
 		}
 		// bitangent
 		if (mesh->mBitangents)
 		{
-			vector.x = mesh->mBitangents[i].x;
-			vector.y = mesh->mBitangents[i].y;
-			vector.z = mesh->mBitangents[i].z;
+			aiVector3D bitangents = mesh->mBitangents[i].Normalize();
+			vector.x = bitangents.x;
+			vector.y = bitangents.y;
+			vector.z = bitangents.z;
 			vertex.Bitangent = vector;
 		}
 
@@ -140,6 +143,9 @@ Mesh* Model::processMesh(aiMesh *mesh, const aiScene *scene)
 
 		std::vector<Texture> normalMaps = loadMaterialTextures(material, aiTextureType_NORMALS, "texture_normal");
 		textures.insert(textures.end(), normalMaps.begin(), normalMaps.end());
+
+		std::vector<Texture> heightMaps = loadMaterialTextures(material, aiTextureType_HEIGHT, "texture_height");
+		textures.insert(textures.end(), heightMaps.begin(), heightMaps.end());
 		
 		aiColor4D mat_color;
 

@@ -78,6 +78,7 @@ void Mesh::Draw(Shader shader, int numOfDrawCalls)
 		unsigned int diffuseNr = 0;
 		unsigned int specularNr = 0;
 		unsigned int normalNr = 0;
+		unsigned int heightNr = 0;
 
 		for (unsigned int i = 0; i < textures.size(); i++)
 		{
@@ -91,6 +92,8 @@ void Mesh::Draw(Shader shader, int numOfDrawCalls)
 				number = std::to_string(++specularNr); // transfer unsigned int to stream
 			else if (name == "texture_normal")
 				number = std::to_string(++normalNr);
+			else if (name == "texture_height")
+				number = std::to_string(++heightNr);
 
 			shader.setInt(("material." + name + number).c_str(), i);
 			//glUniform1i(glGetUniformLocation(shader.getShaderProgram(), (name + number).c_str()), i);
@@ -100,6 +103,7 @@ void Mesh::Draw(Shader shader, int numOfDrawCalls)
 		shader.setBool("material.use_texture_diffuse", diffuseNr > 0);
 		shader.setBool("material.use_texture_specular", specularNr > 0);
 		shader.setBool("material.use_texture_normal", normalNr > 0);
+		shader.setBool("material.use_texture_height", false);
 
 		shader.setVec4("material.diffuse_color", material.diffuse_color);
 		shader.setVec4("material.specular_color", material.specular_color);
@@ -108,7 +112,6 @@ void Mesh::Draw(Shader shader, int numOfDrawCalls)
 
 	shader.setBool("useInstances", useInstances);
 
-	//glActiveTexture(GL_TEXTURE0);
 	// draw mesh
 	glBindVertexArray(VAO);
 	if(useInstances)

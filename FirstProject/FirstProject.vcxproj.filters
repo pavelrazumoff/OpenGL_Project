@@ -34,50 +34,95 @@
     <Filter Include="Shaders\Blur">
       <UniqueIdentifier>{edfa42d1-c891-417a-8319-4aa853a31ff0}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Main Sources">
+      <UniqueIdentifier>{8ed5a554-3275-424a-9766-14076bee5e6f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Main Headers">
+      <UniqueIdentifier>{bc193703-d4b1-475d-8a31-e1b05f8feda4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Shaders">
+      <UniqueIdentifier>{d0d2e473-3b5b-4748-a66f-2023de21361d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Models">
+      <UniqueIdentifier>{ab56eba7-fee4-42ea-9552-87a141952a7e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Shaders">
+      <UniqueIdentifier>{396200e1-4606-4216-bd48-06339354aa8d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Models">
+      <UniqueIdentifier>{1427af34-d8e0-4ba5-8519-61308055544a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Miscellaneous">
+      <UniqueIdentifier>{1b08e0f6-12e1-4adc-aec6-767c81564f13}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Miscellaneous">
+      <UniqueIdentifier>{76ee2c72-cbc2-4dc7-ae11-360c1c5c1c71}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="glad.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Utility.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Shader.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="stb_image.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Camera.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Source.cpp">
+      <Filter>Source Files\Main Sources</Filter>
     </ClCompile>
-    <ClCompile Include="Mesh.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Sources\Main App\DrawData.cpp">
+      <Filter>Source Files\Main Sources</Filter>
     </ClCompile>
-    <ClCompile Include="Model.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Sources\Main App\FramebuffersData.cpp">
+      <Filter>Source Files\Main Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\Main App\Input.cpp">
+      <Filter>Source Files\Main Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\Main App\LoadData.cpp">
+      <Filter>Source Files\Main Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\Main App\MainApp.cpp">
+      <Filter>Source Files\Main Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\Shaders\Shader.cpp">
+      <Filter>Source Files\Shaders</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\Models\Mesh.cpp">
+      <Filter>Source Files\Models</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\Models\Model.cpp">
+      <Filter>Source Files\Models</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\Miscellaneous\Camera.cpp">
+      <Filter>Source Files\Miscellaneous</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\Miscellaneous\Utility.cpp">
+      <Filter>Source Files\Miscellaneous</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Header.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Shader.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="stb_image.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Camera.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="Sources\Main App\MainApp.h">
+      <Filter>Header Files\Main Headers</Filter>
     </ClInclude>
-    <ClInclude Include="Mesh.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="Sources\Main App\MainData.h">
+      <Filter>Header Files\Main Headers</Filter>
     </ClInclude>
-    <ClInclude Include="Model.h">
+    <ClInclude Include="Sources\Shaders\Shader.h">
+      <Filter>Header Files\Shaders</Filter>
+    </ClInclude>
+    <ClInclude Include="Sources\Models\Mesh.h">
+      <Filter>Header Files\Models</Filter>
+    </ClInclude>
+    <ClInclude Include="Sources\Models\Model.h">
+      <Filter>Header Files\Models</Filter>
+    </ClInclude>
+    <ClInclude Include="Sources\Miscellaneous\Camera.h">
+      <Filter>Header Files\Miscellaneous</Filter>
+    </ClInclude>
+    <ClInclude Include="Header.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

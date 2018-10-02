@@ -1,4 +1,4 @@
-#include "Header.h"
+#include "../../Header.h"
 
 unsigned int loadCubemap(std::vector<std::string> faces, bool gamma)
 {

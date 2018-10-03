@@ -153,3 +153,39 @@ void MainApp::resizeBloomFramebuffer(unsigned int FBO, unsigned int texBuffer[],
 	glBindRenderbuffer(GL_RENDERBUFFER, 0);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
+
+void MainApp::resizeGFramebuffer(unsigned int FBO, unsigned int texBuffer[], unsigned int RBO)
+{
+	// Resize framebuffer.
+	glBindFramebuffer(GL_FRAMEBUFFER, FBO);
+
+	for (int i = 0; i < 3; ++i)
+	{
+		GLenum dataFormat;
+		if (i < 2)
+			dataFormat = GL_RGB16F;
+		else
+			dataFormat = GL_RGB;
+
+		glBindTexture(GL_TEXTURE_2D, texBuffer[i]);
+		glTexImage2D(GL_TEXTURE_2D, 0, dataFormat, screenWidth, screenHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+		glBindTexture(GL_TEXTURE_2D, 0);
+	}
+
+	glBindRenderbuffer(GL_RENDERBUFFER, RBO);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, screenWidth, screenHeight);
+	glBindRenderbuffer(GL_RENDERBUFFER, 0);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+void MainApp::resizeSsaoFramebuffer(unsigned int FBO, unsigned int texBuffer)
+{
+	// Resize framebuffer.
+	glBindFramebuffer(GL_FRAMEBUFFER, FBO);
+
+	glBindTexture(GL_TEXTURE_2D, texBuffer);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, screenWidth, screenHeight, 0, GL_RGB, GL_FLOAT, NULL);
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}

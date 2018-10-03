@@ -47,3 +47,8 @@ unsigned int loadCubemap(std::vector<std::string> faces, bool gamma)
 
 	return textureID;
 }
+
+float lerp(float a, float b, float f)
+{
+	return a + f * (b - a);
+}

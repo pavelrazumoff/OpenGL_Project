@@ -125,6 +125,7 @@
     <ClCompile Include="Source.cpp" />
     <ClCompile Include="Sources\Main App\DrawData.cpp" />
     <ClCompile Include="Sources\Main App\FramebuffersData.cpp" />
+    <ClCompile Include="Sources\Main App\InitData.cpp" />
     <ClCompile Include="Sources\Main App\Input.cpp" />
     <ClCompile Include="Sources\Main App\LoadData.cpp" />
     <ClCompile Include="Sources\Main App\MainApp.cpp" />
@@ -150,6 +151,8 @@
     <None Include="Shaders\Basic\GeometryShader.glsl" />
     <None Include="Shaders\Basic\ShadowDepthFS.glsl" />
     <None Include="Shaders\Basic\ShadowDepthVS.glsl" />
+    <None Include="Shaders\Basic\SSAO\SsaoShaderFS.glsl" />
+    <None Include="Shaders\Basic\SSAO\SsaoShaderVS.glsl" />
     <None Include="Shaders\Basic\VertexShader.glsl" />
     <None Include="Shaders\Blur\BlurShaderFS.glsl" />
     <None Include="Shaders\Blur\BlurShaderVS.glsl" />
@@ -162,6 +165,10 @@
     <None Include="Shaders\Screen\ScreenShaderVS.glsl" />
     <None Include="Shaders\Skybox\SkyboxShaderFS.glsl" />
     <None Include="Shaders\Skybox\SkyboxShaderVS.glsl" />
+    <None Include="Shaders\SSAO\SsaoBlurFS.glsl" />
+    <None Include="Shaders\SSAO\SsaoFS.glsl" />
+    <None Include="Shaders\SSAO\SsaoLightingFS.glsl" />
+    <None Include="Shaders\SSAO\SsaoVS.glsl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

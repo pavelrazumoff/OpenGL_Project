@@ -58,6 +58,12 @@
     <Filter Include="Header Files\Miscellaneous">
       <UniqueIdentifier>{76ee2c72-cbc2-4dc7-ae11-360c1c5c1c71}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Shaders\Basic\SSAO">
+      <UniqueIdentifier>{a5786329-a8fa-4f83-9633-cd5c178fb612}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shaders\SSAO">
+      <UniqueIdentifier>{d2db644a-4112-4d9d-a7e6-51f738b4f6a1}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="glad.c">
@@ -98,6 +104,9 @@
     </ClCompile>
     <ClCompile Include="Sources\Miscellaneous\Utility.cpp">
       <Filter>Source Files\Miscellaneous</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\Main App\InitData.cpp">
+      <Filter>Source Files\Main Sources</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -174,6 +183,24 @@
     </None>
     <None Include="Shaders\Screen\FinalShaderFS.glsl">
       <Filter>Shaders\Screen</Filter>
+    </None>
+    <None Include="Shaders\Basic\SSAO\SsaoShaderVS.glsl">
+      <Filter>Shaders\Basic\SSAO</Filter>
+    </None>
+    <None Include="Shaders\Basic\SSAO\SsaoShaderFS.glsl">
+      <Filter>Shaders\Basic\SSAO</Filter>
+    </None>
+    <None Include="Shaders\SSAO\SsaoVS.glsl">
+      <Filter>Shaders\SSAO</Filter>
+    </None>
+    <None Include="Shaders\SSAO\SsaoFS.glsl">
+      <Filter>Shaders\SSAO</Filter>
+    </None>
+    <None Include="Shaders\SSAO\SsaoBlurFS.glsl">
+      <Filter>Shaders\SSAO</Filter>
+    </None>
+    <None Include="Shaders\SSAO\SsaoLightingFS.glsl">
+      <Filter>Shaders\SSAO</Filter>
     </None>
   </ItemGroup>
 </Project>

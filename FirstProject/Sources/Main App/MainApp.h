@@ -21,6 +21,7 @@ public:
 
 	int initWindow();
 	void init();
+	void initScene();
 	void loadShaders();
 	void loadTextures();
 	void initBuffers();
@@ -29,7 +30,7 @@ public:
 	void render();
 	void resize(int width, int height);
 
-	void drawScene(Shader shader);
+	void drawScene(Shader shader, bool finalDraw);
 
 	// input.
 	void processInput(GLFWwindow *window);
@@ -41,6 +42,8 @@ public:
 	void generateBloomFramebuffer(unsigned int* FBO, unsigned int* texBuffer, unsigned int* RBO, bool useHDR);
 	void resizeFramebuffer(unsigned int FBO, unsigned int texBuffer, unsigned int RBO, bool useMultisampling, bool useHDR);
 	void resizeBloomFramebuffer(unsigned int FBO, unsigned int texBuffer[], unsigned int RBO, bool useHDR);
+	void resizeGFramebuffer(unsigned int FBO, unsigned int texBuffer[], unsigned int RBO);
+	void resizeSsaoFramebuffer(unsigned int FBO, unsigned int texBuffer);
 
 	GLFWwindow* getWindow();
 
@@ -52,6 +55,12 @@ public:
 	Shader debugDepthQuad;
 	Shader final_shader;
 	Shader shaderBlur;
+
+	//SSAO.
+	Shader shaderGeometryPass;
+	Shader shaderSSAO;
+	Shader shaderSSAOBlur;
+	Shader shaderLightingPass;
 
 	Camera camera;
 	Model model;
@@ -69,6 +78,17 @@ private:
 	unsigned int framebuffer, intermediateFBO, finalFBO, depthMapFBO;
 	unsigned int texColorMSBuffer, screenTexture, depthMap;
 	unsigned int rbo, intermediateRBO, finalRBO;
+
+	//SSAO.
+	unsigned int gBuffer;
+	unsigned int gPosition, gNormal, gAlbedo;
+	unsigned int rboDepth;
+	unsigned int ssaoFBO, ssaoBlurFBO;
+	unsigned int noiseTexture;
+	unsigned int ssaoColorBuffer, ssaoColorBufferBlur;
+
+	std::vector<glm::vec3> ssaoKernel;
+	std::vector<glm::vec3> ssaoNoise;
 
 	unsigned int finalTextures[2];
 
@@ -101,4 +121,8 @@ private:
 	bool useShadowMapping = false;
 	bool useHDR = true;
 	bool useBloom = true;
+	bool useAmbientOcclusion = true;
+
+	glm::vec3 lightPos;
+	glm::vec3 lightColors[4];
 };

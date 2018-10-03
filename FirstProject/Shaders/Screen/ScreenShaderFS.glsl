@@ -5,10 +5,12 @@ in vec2 TexCoords;
 
 uniform sampler2D screenTexture;
 uniform sampler2D bloomTexture;
+uniform sampler2D ssaoTexture;
 
 uniform bool gammaCorrection;
 uniform bool useHDR;
 uniform bool useBloom;
+uniform bool useAmbientOcclusion;
 uniform float exposure;
 
 const float offset = 1.0 / 500.0;
@@ -34,5 +36,12 @@ void main()
 
 	if (gammaCorrection)
 		result = pow(result.rgb, vec3(1.0 / gamma));
+
+	if (useAmbientOcclusion)
+	{
+		float ambientOcclusion = texture(ssaoTexture, TexCoords).r;
+		result *= ambientOcclusion;
+	}
+
 	FragColor = vec4(result, 1.0);
 }

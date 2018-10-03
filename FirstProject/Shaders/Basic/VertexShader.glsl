@@ -29,20 +29,23 @@ out VS_OUT {
 void main()
 {
 	// note that we read the multiplication from right to left
-	if(!useInstances)
-		gl_Position = projection * view * model * vec4(aPos, 1.0);
+	mat4 worldMat;
+	if (!useInstances)
+		worldMat = model;
 	else
-		gl_Position = projection * view * aInstanceMatrix * vec4(aPos, 1.0f);
-	vs_out.Normal = transpose(inverse(mat3(model))) * aNormal;
-	vs_out.FragPos = vec3(model * vec4(aPos, 1.0));
+		worldMat = aInstanceMatrix;
+
+	gl_Position = projection * view * worldMat * vec4(aPos, 1.0);
+	vs_out.Normal = transpose(inverse(mat3(worldMat))) * aNormal;
+	vs_out.FragPos = vec3(worldMat * vec4(aPos, 1.0));
 	vs_out.TexCoords = aTexCoords;
 
 	if(useShadowMapping)
 		vs_out.FragPosLightSpace = lightSpaceMatrix * vec4(vs_out.FragPos, 1.0);
 	
-	vec3 T = normalize(vec3(model * vec4(aTangent, 0.0)));
-	vec3 B = normalize(vec3(model * vec4(aBitangent, 0.0)));
-	vec3 N = normalize(vec3(model * vec4(aNormal, 0.0)));
+	vec3 T = normalize(vec3(worldMat * vec4(aTangent, 0.0)));
+	vec3 B = normalize(vec3(worldMat * vec4(aBitangent, 0.0)));
+	vec3 N = normalize(vec3(worldMat * vec4(aNormal, 0.0)));
 
 	// TBN must form a right handed coord system.
     // Some models have symetric UVs. Check and fix.

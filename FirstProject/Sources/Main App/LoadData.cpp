@@ -13,6 +13,12 @@ void MainApp::loadShaders()
 	skybox_shader.load("Shaders//Skybox//SkyboxShaderVS.glsl", "Shaders//Skybox//SkyboxShaderFS.glsl");
 	final_shader.load("Shaders//Screen//ScreenShaderVS.glsl", "Shaders//Screen//FinalShaderFS.glsl");
 	shaderBlur.load("Shaders//Blur//BlurShaderVS.glsl", "Shaders//Blur//BlurShaderFS.glsl");
+
+	// ssao.
+	shaderGeometryPass.load("Shaders//Basic//SSAO//SsaoShaderVS.glsl", "Shaders//Basic//SSAO//SsaoShaderFS.glsl");
+	shaderSSAO.load("Shaders//SSAO//SsaoVS.glsl", "Shaders//SSAO//SsaoFS.glsl");
+	shaderSSAOBlur.load("Shaders//SSAO//SsaoVS.glsl", "Shaders//SSAO//SsaoBlurFS.glsl");
+	shaderLightingPass.load("Shaders//SSAO//SsaoVS.glsl", "Shaders//SSAO//SsaoLightingFS.glsl");
 }
 
 void MainApp::loadTextures()
@@ -27,4 +33,6 @@ void MainApp::loadTextures()
 	};
 
 	cubemapTexture = loadCubemap(faces, useGammaCorrection);
+
+	woodTexture = TextureFromFile("floor.jpg", "Images", useGammaCorrection);
 }

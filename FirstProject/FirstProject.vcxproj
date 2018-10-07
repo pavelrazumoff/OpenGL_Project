@@ -70,8 +70,8 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>D:\OpenGL\glfw-3.2.1\include;D:\OpenGL\GLAD\include;D:\OpenGL\glm-0.9.9.2;D:\ASSIMP\assimp-4.1.0\include;D:\ASSIMP\assimp-4.1.0 build\include;$(IncludePath)</IncludePath>
-    <LibraryPath>D:\OpenGL\glfw_build\src\Debug;D:\ASSIMP\assimp-4.1.0 build\code\Debug;$(LibraryPath)</LibraryPath>
+    <IncludePath>D:\OpenGL\glfw-3.2.1\include;D:\OpenGL\GLAD\include;D:\OpenGL\glm-0.9.9.2;D:\ASSIMP\assimp-4.1.0\include;D:\ASSIMP\assimp-4.1.0 build\include;D:\OpenGL\freetype-2.9.1\include;$(IncludePath)</IncludePath>
+    <LibraryPath>D:\OpenGL\glfw_build\src\Debug;D:\ASSIMP\assimp-4.1.0 build\code\Debug;D:\OpenGL\freetype-2.9.1 build\Debug;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -81,7 +81,7 @@
       <ConformanceMode>true</ConformanceMode>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>opengl32.lib;glfw3.lib;assimpd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opengl32.lib;glfw3.lib;assimpd.lib;freetyped.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -124,7 +124,7 @@
     <ClCompile Include="glad.c" />
     <ClCompile Include="Source.cpp" />
     <ClCompile Include="Sources\Main App\DrawData.cpp" />
-    <ClCompile Include="Sources\Main App\FramebuffersData.cpp" />
+    <ClCompile Include="Sources\Main App\BuffersData.cpp" />
     <ClCompile Include="Sources\Main App\InitData.cpp" />
     <ClCompile Include="Sources\Main App\Input.cpp" />
     <ClCompile Include="Sources\Main App\LoadData.cpp" />
@@ -158,6 +158,8 @@
     <None Include="Shaders\Blur\BlurShaderVS.glsl" />
     <None Include="Shaders\Debug\DebugQuadFS.glsl" />
     <None Include="Shaders\Debug\DebugQuadVS.glsl" />
+    <None Include="Shaders\Font\FontShaderFS.glsl" />
+    <None Include="Shaders\Font\FontShaderVS.glsl" />
     <None Include="Shaders\Lamp\LampFS.glsl" />
     <None Include="Shaders\Lamp\LampVS.glsl" />
     <None Include="Shaders\Screen\FinalShaderFS.glsl" />
@@ -167,7 +169,6 @@
     <None Include="Shaders\Skybox\SkyboxShaderVS.glsl" />
     <None Include="Shaders\SSAO\SsaoBlurFS.glsl" />
     <None Include="Shaders\SSAO\SsaoFS.glsl" />
-    <None Include="Shaders\SSAO\SsaoLightingFS.glsl" />
     <None Include="Shaders\SSAO\SsaoVS.glsl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

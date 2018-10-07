@@ -18,7 +18,9 @@ void MainApp::loadShaders()
 	shaderGeometryPass.load("Shaders//Basic//SSAO//SsaoShaderVS.glsl", "Shaders//Basic//SSAO//SsaoShaderFS.glsl");
 	shaderSSAO.load("Shaders//SSAO//SsaoVS.glsl", "Shaders//SSAO//SsaoFS.glsl");
 	shaderSSAOBlur.load("Shaders//SSAO//SsaoVS.glsl", "Shaders//SSAO//SsaoBlurFS.glsl");
-	shaderLightingPass.load("Shaders//SSAO//SsaoVS.glsl", "Shaders//SSAO//SsaoLightingFS.glsl");
+
+	//font.
+	font_shader.load("Shaders//Font//FontShaderVS.glsl", "Shaders//Font//FontShaderFS.glsl");
 }
 
 void MainApp::loadTextures()

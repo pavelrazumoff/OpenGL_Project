@@ -64,6 +64,9 @@
     <Filter Include="Shaders\SSAO">
       <UniqueIdentifier>{d2db644a-4112-4d9d-a7e6-51f738b4f6a1}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Shaders\Font">
+      <UniqueIdentifier>{e0e47846-724e-47fd-b466-bceb67cb8ce9}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="glad.c">
@@ -76,9 +79,6 @@
       <Filter>Source Files\Main Sources</Filter>
     </ClCompile>
     <ClCompile Include="Sources\Main App\DrawData.cpp">
-      <Filter>Source Files\Main Sources</Filter>
-    </ClCompile>
-    <ClCompile Include="Sources\Main App\FramebuffersData.cpp">
       <Filter>Source Files\Main Sources</Filter>
     </ClCompile>
     <ClCompile Include="Sources\Main App\Input.cpp">
@@ -106,6 +106,9 @@
       <Filter>Source Files\Miscellaneous</Filter>
     </ClCompile>
     <ClCompile Include="Sources\Main App\InitData.cpp">
+      <Filter>Source Files\Main Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\Main App\BuffersData.cpp">
       <Filter>Source Files\Main Sources</Filter>
     </ClCompile>
   </ItemGroup>
@@ -199,8 +202,11 @@
     <None Include="Shaders\SSAO\SsaoBlurFS.glsl">
       <Filter>Shaders\SSAO</Filter>
     </None>
-    <None Include="Shaders\SSAO\SsaoLightingFS.glsl">
-      <Filter>Shaders\SSAO</Filter>
+    <None Include="Shaders\Font\FontShaderFS.glsl">
+      <Filter>Shaders\Font</Filter>
+    </None>
+    <None Include="Shaders\Font\FontShaderVS.glsl">
+      <Filter>Shaders\Font</Filter>
     </None>
   </ItemGroup>
 </Project>

@@ -251,6 +251,9 @@ void MainApp::initBuffers()
 		// 4. now add to list of matrices
 		modelMatrices[i] = model;
 	}
+
+	// Font buffers init.
+	generateFontBuffers();
 }
 
 void MainApp::initScene()
@@ -302,11 +305,6 @@ void MainApp::initScene()
 
 	// shader configuration
 	// --------------------
-	shaderLightingPass.use();
-	shaderLightingPass.setInt("gPosition", 0);
-	shaderLightingPass.setInt("gNormal", 1);
-	shaderLightingPass.setInt("gAlbedo", 2);
-	shaderLightingPass.setInt("ssao", 3);
 	shaderSSAO.use();
 	shaderSSAO.setInt("gPosition", 0);
 	shaderSSAO.setInt("gNormal", 1);

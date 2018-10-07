@@ -1,5 +1,21 @@
 #include "MainApp.h"
 
+void MainApp::generateFontBuffers()
+{
+	glGenVertexArrays(1, &fontVAO);
+	glGenBuffers(1, &fontVBO);
+
+	glBindVertexArray(fontVAO);
+	glBindBuffer(GL_ARRAY_BUFFER, fontVBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 6 * 4, NULL, GL_DYNAMIC_DRAW);
+
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), 0);
+
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindVertexArray(0);
+}
+
 void MainApp::generateFramebuffer(unsigned int* FBO, unsigned int* texBuffer, unsigned int* RBO, bool useMultisampling, bool useHDR)
 {
 	glGenFramebuffers(1, FBO);

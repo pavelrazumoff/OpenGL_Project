@@ -15,6 +15,8 @@ void MainApp::render()
 	glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(view));
 	glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
+	// Note, that using ambient occlusion will increase perfomance drop near two times,
+	// because it is not optimized to reuse G-buffer for later lighting calculations.
 	if (useAmbientOcclusion)
 	{
 		//SSAO.
@@ -65,6 +67,7 @@ void MainApp::render()
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	}
 
+	// Drow some shadows.
 	if (useShadowMapping)
 	{
 		// Shadow mapping.
@@ -94,6 +97,7 @@ void MainApp::render()
 		glViewport(0, 0, screenWidth, screenHeight);
 	}
 
+	// Draw scene as normal.
 	// first render scene in specific framebuffer.
 	glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
 	glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
@@ -123,10 +127,12 @@ void MainApp::render()
 	basic_shader.setFloat("near_plane", near_plane);
 	basic_shader.setFloat("far_plane", far_plane);
 
+	// Link diffuse texture to be able to render textured primitives before render models.
 	glActiveTexture(GL_TEXTURE0);
 	basic_shader.setInt("material.texture_diffuse1", 0);
 	glBindTexture(GL_TEXTURE_2D, woodTexture);
 
+	// Connect shadow map to the 4-th slot.
 	if (useShadowMapping)
 	{
 		glActiveTexture(GL_TEXTURE4);
@@ -134,6 +140,7 @@ void MainApp::render()
 		glBindTexture(GL_TEXTURE_2D, depthMap);
 	}
 
+	// Render scene as normal.
 	drawScene(basic_shader, true);
 
 	// draw skybox as last.
@@ -163,6 +170,7 @@ void MainApp::render()
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, intermediateFBO);
 	glBlitFramebuffer(0, 0, screenWidth, screenHeight, 0, 0, screenWidth, screenHeight, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
+	// Draw intermediate's screenTexture to the bloom framebuffer as normal.
 	glBindFramebuffer(GL_FRAMEBUFFER, finalFBO); // back to default
 	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
@@ -184,6 +192,8 @@ void MainApp::render()
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 	bool horizontal = true, first_iteration = true;
+
+	// If we use bloom, blur rendered scene, if not pass further.
 	if (useBloom)
 	{
 		unsigned int amount = 10;
@@ -205,6 +215,7 @@ void MainApp::render()
 		}
 	}
 
+	// Bind final source framebuffer and render finalTextures[0] for final post-processing.
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -239,20 +250,7 @@ void MainApp::render()
 	glDrawArrays(GL_TRIANGLES, 0, 6);
 
 	// Draw text.
-	GLint prevBlendFunc;
-	glGetIntegerv(GL_BLEND_SRC_ALPHA, &prevBlendFunc);
-
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	projection = glm::ortho(0.0f, static_cast<GLfloat>(screenWidth), 0.0f, static_cast<GLfloat>(screenHeight));
-
-	font_shader.use();
-	font_shader.setMat4("projection", projection);
-
-	RenderText(font_shader, "This is a property of Paul Razumov, 2018.", 25.0f, 25.0f, 1.0f, glm::vec3(0.0, 0.68f, 1.0f));
-
-	glBlendFunc(GL_SRC_ALPHA, prevBlendFunc);
-	glDisable(GL_BLEND);
+	drawTextData();
 
 	// Uncomment it for debugging purposes.
 	// It will draw current depth map.
@@ -335,6 +333,51 @@ void MainApp::drawScene(Shader shader, bool finalDraw)
 	planet.Draw(shader);
 
 	rock.Draw(shader, amount);
+}
+
+void MainApp::drawTextData()
+{
+	GLint prevBlendFunc;
+	glGetIntegerv(GL_BLEND_SRC_ALPHA, &prevBlendFunc);
+
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glm::mat4 projection = glm::ortho(0.0f, static_cast<GLfloat>(screenWidth), 0.0f, static_cast<GLfloat>(screenHeight));
+
+	font_shader.use();
+	font_shader.setMat4("projection", projection);
+
+	std::string textArray[] = {
+		"Multisampling",
+		"GammaCorrection",
+		"ShadowMapping",
+		"HDR",
+		"Bloom",
+		"AmbientOcclusion"
+	};
+
+	bool params[] = {
+		useMultisampling,
+		useGammaCorrection,
+		useShadowMapping,
+		useHDR,
+		useBloom,
+		useAmbientOcclusion
+	};
+
+	for (int i = 0; i < 6; ++i)
+	{
+		std::string out_text;
+		
+		if(params[i])
+			out_text = " - disable ";
+		else
+			out_text = " - enable ";
+		RenderText(font_shader, std::to_string(i + 1) + out_text + textArray[i], 25.0f, screenHeight - 100.0f - i * 25.0f, 1.0f, glm::vec3(0.0, 0.68f, 1.0f));
+	}
+
+	glBlendFunc(GL_SRC_ALPHA, prevBlendFunc);
+	glDisable(GL_BLEND);
 }
 
 void MainApp::RenderText(Shader &s, std::string text, GLfloat x, GLfloat y, GLfloat scale, glm::vec3 color)

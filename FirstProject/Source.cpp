@@ -4,6 +4,8 @@ MainApp app;
 
 int main()
 {
+	// GLFW initialization.
+	// Used to create window, context and manage user input as well.
 	glfwInit();
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -18,7 +20,7 @@ int main()
 
 	while (!glfwWindowShouldClose(app.getWindow()))
 	{
-		// Input.
+		// Handle basic input.
 		processInput(app.getWindow());
 
 		// Updating.
@@ -48,6 +50,11 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 void processInput(GLFWwindow *window)
 {
 	app.processInput(window);
+}
+
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
+{
+	app.processKey(window, key, scancode, action, mods);
 }
 
 void mouse_callback(GLFWwindow* window, double xpos, double ypos)

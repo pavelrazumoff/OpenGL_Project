@@ -8,8 +8,10 @@ MainApp::MainApp(int screenWidth, int screenHeight)
 
 int MainApp::initWindow()
 {
+	// Here we create window, load GLAD and set some input functions.
 	//glfwWindowHint(GLFW_SAMPLES, 4);
 
+	// Create basic window.
 	window = glfwCreateWindow(screenWidth, screenHeight, "LearnOpenGL", NULL, NULL);
 	if (window == NULL)
 	{
@@ -19,6 +21,7 @@ int MainApp::initWindow()
 	}
 	glfwMakeContextCurrent(window);
 
+	// Load GLAD, that we'll use to wrap OpenGL function for easy use.
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
 	{
 		std::cout << "Failed to initialize GLAD" << std::endl;
@@ -27,12 +30,14 @@ int MainApp::initWindow()
 
 	glViewport(0, 0, screenWidth, screenHeight);
 
+	// Uncomment it to disable cursor showing.
 	//glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 	glfwSetCursorPosCallback(window, mouse_callback);
 	glfwSetMouseButtonCallback(window, mouse_click_callback);
 	glfwSetScrollCallback(window, scroll_callback);
+	glfwSetKeyCallback(window, key_callback);
 }
 
 void MainApp::setScreenSize(int screenWidth, int screenHeight)
@@ -48,8 +53,10 @@ GLFWwindow* MainApp::getWindow()
 
 void MainApp::init()
 {
+	// Here we init some base objects, such as camera, buffers, fonts, models and textures.
 	camera.init(glm::vec3(0.0f, 1.0f, 6.0f), glm::vec3(0.0f, 1.0f, 0.0f), -90.0f, 0.0f);
 
+	// Enable depth test, backface culling and using multisampling.
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
 	glEnable(GL_MULTISAMPLE);
@@ -65,23 +72,31 @@ void MainApp::init()
 	planet.loadModel("Models//planet.obj", useGammaCorrection);
 	rock.loadModel("Models//rock.obj", useGammaCorrection);
 
+	// Set it to be able to render a huge amount of this model without perfomance drop.
 	rock.setInstancesTransforms(modelMatrices, amount);
 
+	// Initialize some constant shader values, such as light, that will be used in scene.
 	initScene();
 }
 
 void MainApp::loadFonts()
 {
+	// Initialize FreeType library.
 	FT_Library ft;
 	if (FT_Init_FreeType(&ft))
 		std::cout << "ERROR::FREETYPE: Could not init FreeType Library" << std::endl;
+
+	// Load specific font.
 	FT_Face face;
 	if (FT_New_Face(ft, "Fonts/PT Sans Narrow.ttf", 0, &face))
 		std::cout << "ERROR::FREETYPE: Failed to load font" << std::endl;
 
-	FT_Set_Pixel_Sizes(face, 0, 24);
+	// Set font size.
+	FT_Set_Pixel_Sizes(face, 0, 18);
 
 	glPixelStorei(GL_UNPACK_ALIGNMENT, 1); // Disable byte-alignment restriction
+
+	// Load font for 128 characters.
 	for (GLubyte c = 0; c < 128; c++)
 	{
 		// Load character glyph
@@ -117,6 +132,7 @@ void MainApp::loadFonts()
 
 void MainApp::update()
 {
+	// Update delta time between two frames.
 	float currentFrame = glfwGetTime();
 	deltaTime = currentFrame - lastFrame;
 	lastFrame = currentFrame;
@@ -124,15 +140,21 @@ void MainApp::update()
 
 void MainApp::resize(int width, int height)
 {
+	// Calls when window is resizing.
 	screenWidth = width;
 	screenHeight = height;
 
-	resizeFramebuffer(framebuffer, texColorMSBuffer, rbo, useMultisampling, useHDR);
-	resizeFramebuffer(intermediateFBO, screenTexture, intermediateRBO, false, useHDR);
+	// Rebuild framebuffers to make them match new window dimensions.
+	// Resize main scene framebuffer.
+	resizeFramebuffer(framebuffer, texColorMSBuffer, rbo, useMultisampling, useHDR, true);
+	// Resize intermediate framebuffer, that used to store framebuffer's rendered scene (used to get around multisampling).
+	resizeFramebuffer(intermediateFBO, screenTexture, intermediateRBO, false, useHDR, false);
+	// Resize bloom framebuffers (pingpong as also).
 	resizeBloomFramebuffer(finalFBO, finalTextures, finalRBO, useHDR);
 	for (int i = 0; i < 2; ++i)
-		resizeFramebuffer(pingpongFBO[i], pingpongColorbuffers[i], -1, false, useHDR);
+		resizeFramebuffer(pingpongFBO[i], pingpongColorbuffers[i], -1, false, useHDR, false);
 
+	// Resize ambient occlusion buffers.
 	unsigned int gTextures[] = { gPosition, gNormal, gAlbedo };
 	resizeGFramebuffer(gBuffer, gTextures, rboDepth);
 

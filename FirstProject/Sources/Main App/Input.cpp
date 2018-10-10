@@ -15,6 +15,52 @@ void MainApp::processInput(GLFWwindow *window)
 		camera.ProcessKeyboard(RIGHT, deltaTime);
 }
 
+void MainApp::processKey(GLFWwindow* window, int key, int scancode, int action, int mods)
+{
+	if(key == GLFW_KEY_1 && action == GLFW_PRESS && !key_pressed)
+	{
+		useMultisampling = !useMultisampling;
+		resize(screenWidth, screenHeight);
+		key_pressed = true;
+	}
+
+	if (key == GLFW_KEY_2 && action == GLFW_PRESS && !key_pressed)
+	{
+		useGammaCorrection = !useGammaCorrection;
+		key_pressed = true;
+	}
+
+	if (key == GLFW_KEY_3 && action == GLFW_PRESS && !key_pressed)
+	{
+		useShadowMapping = !useShadowMapping;
+		key_pressed = true;
+	}
+
+	if (key == GLFW_KEY_4 && action == GLFW_PRESS && !key_pressed)
+	{
+		useHDR = !useHDR;
+		resize(screenWidth, screenHeight);
+		key_pressed = true;
+	}
+
+	if (key == GLFW_KEY_5 && action == GLFW_PRESS && !key_pressed)
+	{
+		useBloom = !useBloom;
+		key_pressed = true;
+	}
+
+	if (key == GLFW_KEY_6 && action == GLFW_PRESS && !key_pressed)
+	{
+		useAmbientOcclusion = !useAmbientOcclusion;
+		key_pressed = true;
+	}
+
+	if (action == GLFW_RELEASE)
+	{
+		key_pressed = false;
+	}
+}
+
 void MainApp::processMouseMove(GLFWwindow* window, double xpos, double ypos)
 {
 	if (firstMouseUse) // this bool variable is initially set to true.

@@ -111,7 +111,7 @@ void MainApp::generateBloomFramebuffer(unsigned int* FBO, unsigned int* texBuffe
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void MainApp::resizeFramebuffer(unsigned int FBO, unsigned int texBuffer, unsigned int RBO, bool useMultisampling, bool useHDR)
+void MainApp::resizeFramebuffer(unsigned int FBO, unsigned int texBuffer, unsigned int RBO, bool useMultisampling, bool useHDR, bool forceRegenerate)
 {
 	// Resize framebuffer.
 	glBindFramebuffer(GL_FRAMEBUFFER, FBO);
@@ -121,6 +121,17 @@ void MainApp::resizeFramebuffer(unsigned int FBO, unsigned int texBuffer, unsign
 		dataFormat = GL_RGB16F;
 	else
 		dataFormat = GL_RGB;
+
+	if (forceRegenerate)
+	{
+		glDeleteTextures(1, &texBuffer);
+		glDeleteRenderbuffers(1, &RBO);
+		glDeleteFramebuffers(1, &FBO);
+
+		generateFramebuffer(&FBO, &texBuffer, &RBO, useMultisampling, useHDR);
+
+		return;
+	}
 
 	if (!useMultisampling)
 	{
@@ -135,14 +146,6 @@ void MainApp::resizeFramebuffer(unsigned int FBO, unsigned int texBuffer, unsign
 			glBindRenderbuffer(GL_RENDERBUFFER, 0);
 		}
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	}
-	else
-	{
-		glDeleteTextures(1, &texColorMSBuffer);
-		glDeleteRenderbuffers(1, &rbo);
-		glDeleteFramebuffers(1, &framebuffer);
-
-		generateFramebuffer(&framebuffer, &texColorMSBuffer, &rbo, useMultisampling, useHDR);
 	}
 }
 

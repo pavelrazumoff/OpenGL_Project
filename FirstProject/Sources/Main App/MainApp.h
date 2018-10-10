@@ -7,6 +7,7 @@
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow *window);
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void mouse_click_callback(GLFWwindow* window, int button, int action, int mods);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
@@ -29,6 +30,7 @@ public:
 	void clearBuffers();
 	void update();
 	void render();
+	void drawTextData();
 	void resize(int width, int height);
 
 	void drawScene(Shader shader, bool finalDraw);
@@ -36,6 +38,7 @@ public:
 
 	// input.
 	void processInput(GLFWwindow *window);
+	void processKey(GLFWwindow* window, int key, int scancode, int action, int mods);
 	void processMouseMove(GLFWwindow* window, double xpos, double ypos);
 	void processMouseClick(GLFWwindow* window, int button, int action, int mods);
 	void processMouseScroll(GLFWwindow* window, double xoffset, double yoffset);
@@ -48,7 +51,7 @@ public:
 	void generateBloomFramebuffer(unsigned int* FBO, unsigned int* texBuffer, unsigned int* RBO, bool useHDR);
 
 	// framebuffers resize.
-	void resizeFramebuffer(unsigned int FBO, unsigned int texBuffer, unsigned int RBO, bool useMultisampling, bool useHDR);
+	void resizeFramebuffer(unsigned int FBO, unsigned int texBuffer, unsigned int RBO, bool useMultisampling, bool useHDR, bool forceRegenerate);
 	void resizeBloomFramebuffer(unsigned int FBO, unsigned int texBuffer[], unsigned int RBO, bool useHDR);
 	void resizeGFramebuffer(unsigned int FBO, unsigned int texBuffer[], unsigned int RBO);
 	void resizeSsaoFramebuffer(unsigned int FBO, unsigned int texBuffer);
@@ -112,8 +115,6 @@ private:
 
 	GLuint fontVAO, fontVBO;
 
-	unsigned int diffuseMap;
-	unsigned int specularMap;
 	unsigned int cubemapTexture;
 	unsigned int woodTexture;
 
@@ -127,6 +128,7 @@ private:
 	float lastMouseX = 400, lastMouseY = 300;
 	bool firstMouseUse = true;
 	bool lbutton_down = false;
+	bool key_pressed = false;
 
 	bool useMultisampling = true;
 	bool useGammaCorrection = true;
